@@ -2,6 +2,8 @@ import "@/global.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { Comfortaa_300Light, Comfortaa_400Regular, Comfortaa_500Medium, Comfortaa_600SemiBold, Comfortaa_700Bold, useFonts } from "@expo-google-fonts/comfortaa";
+import * as SplashScreen from "expo-splash-screen";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
@@ -20,6 +22,8 @@ import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 import { EchoAIProvider } from "@/components/echo-ai-provider";
 
+void SplashScreen.preventAutoHideAsync().catch(() => undefined);
+
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
 
@@ -28,11 +32,22 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    Comfortaa_300Light,
+    Comfortaa_400Regular,
+    Comfortaa_500Medium,
+    Comfortaa_600SemiBold,
+    Comfortaa_700Bold,
+  });
   const initialInsets = initialWindowMetrics?.insets ?? DEFAULT_WEB_INSETS;
   const initialFrame = initialWindowMetrics?.frame ?? DEFAULT_WEB_FRAME;
 
   const [insets, setInsets] = useState<EdgeInsets>(initialInsets);
   const [frame, setFrame] = useState<Rect>(initialFrame);
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) void SplashScreen.hideAsync().catch(() => undefined);
+  }, [fontError, fontsLoaded]);
 
   // Initialize Manus runtime for cookie injection from parent container
   useEffect(() => {
@@ -96,6 +111,8 @@ export default function RootLayout() {
   );
 
   const shouldOverrideSafeArea = Platform.OS === "web";
+
+  if (!fontsLoaded && !fontError) return null;
 
   if (shouldOverrideSafeArea) {
     return (
