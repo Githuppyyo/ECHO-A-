@@ -53,3 +53,11 @@
 ## 7. [ ] Native Android gerçek cihaz yürütmesi
 
 - Sandbox'ta Android SDK ve test cihazı olmadığından APK fiziksel cihazda açılmadı. Android 13+ izin istemi, uygulama kapalıyken DownloadManager devamı, tek seferlik indirme/dosya doğrulaması, çevrimdışı AI, PDF paylaşım paneli ve launcher ikonu cihazda çalıştırılmadı; kaynak kodu/önizleme bu davranışların gerçek cihazda kanıtı değildir.
+
+## 8. [ ] Comfortaa, sohbet kartları ve klavye UX güncellemesi
+
+- Uygulamanın genelinde Comfortaa fontunu entegre et. Tüm metin stillerinin (başlıklar, paragraflar, butonlar) bu fonta uyumlu olmasını sağla. Yazıların ekranda net ve okunabilir görünmesini garantile.
+- Mobil klavye açıldığında ekranın sıkışmasını, içeriğin alt alta binmesini veya taşmasını önlemek için dinamik/duyarlı bir yapı kur (örneğin Android için `adjustResize` veya ilgili platforma uygun ekran yüksekliği yönetimi); sohbet ekranında yazılan metin ve gönderme alanı klavyenin üstünde görünür kalsın.
+- Karmaşık tablolar yerine modern ve mobil uyumlu Kart Yapısını (Card Layout) kullan. Tablodaki her bir satırı yuvarlatılmış köşeli (`border-radius: 12px`), hafif gölgeli ve temiz boşluklara sahip ayrı karta dönüştür.
+- Her kartın sol üstünde ana başlık, sağ üstünde durum/kategori bilgisini gösteren renkli etiket (badge) yer alsın. Detay verileri kart içinde düzenli grid veya alt alta etiket-değer (Key-Value) biçiminde gösterilsin.
+- Genel arayüzde boşlukları (`padding`/`margin`), renk uyumunu ve öğe hizalamalarını güncel mobil tasarım ilkelerine göre optimize et.

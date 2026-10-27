@@ -51,11 +51,18 @@ Kullanıcının arayüz kuralı: teknik model adı kullanıcıya dönük arayüz
 - **Signature Elements:** Kullanıcının açılı V işareti; siyah-beyaz kontrast; ince gri ayırıcılar.
 - **Interaction Philosophy:** Kullanıcı “ECHO AI indir”e dokunmadan indirme başlamaz; Android bildirimi ilerlemeyi gösterir ve uygulama kapalıyken sistem indirmesi sürer. Sohbet geçmişi panelinden bir kaydı seçmek o konuşmayı açar; “Yeni sohbet” kayıtları korur. Yanıt metni ilk kullanılabilir tokenla sohbet içinde görünmeye başlar; kullanıcı tamamını beklemeden okumaya başlar. Taslak oluşturma ve PDF dışa aktarma açık kullanıcı eylemleridir.
 - **Animation:** Ana ekranlar ilk açılışta yaklaşık 210 ms süren hafif fade/7 px yükselme ile belirir. Ana düğmeler kısa yaylanmayla yalnızca %1,5 küçülür ve Android'de yumuşak ripple geri bildirimi verir; alt sekmeler de küçük ölçek animasyonuyla yanıtlar. Geçmiş paneli soldan kayar; üretim göstergesi sakin kalır; animasyonlar kısa ve dikkat dağıtmayacak yoğunluktadır.
-- **Typography System:** Yerel sans-serif; başlık 24–28 px, sohbet 15–17 px, yardımcı metin 12–14 px; Kod modunda monospace.
+- **Typography System:** Comfortaa; gövde 15–17 px, başlık 24–28 px, yardımcı metin 12–14 px. Comfortaa metin, etiket ve butonlarda kullanılır; kod editörü ve kod blokları monospace kalır. Satır aralığı uzun sohbetlerde netliği korur.
 - **Brand Essence:** “Türkçe üreten, çevrimdışı da yanında kalan çalışma alanı.” Kişilik: berrak, güvenilir, üretken.
 - **Brand Voice:** Kısa, sakin, jargonsuz; önce kısa ve doğrudan yanıt, gerekirse sonra ayrıntı. Örnek: “Aklındaki soruyu yaz.” / “ECHO AI kuruluyor; sen işlerine devam edebilirsin.”
 - **Wordmark & Logo:** Kullanıcının en son gönderdiği açılı beyaz V ve ECHO AI yazısı tam kare app/splash simgesinde korunur; Android adaptive safe-zone için foreground/monochrome'da yalnız V işareti, background'da saf siyah ayrı tutulur. Logo dosyasının içine yuvarlatılmış köşe çizilmez.
 - **Signature Brand Color:** Siyah `#050505` ve beyaz `#FFFFFF` monokrom kontrast.
+
+## Güncel UX değişiklikleri
+
+- Ekrandaki başlık, paragraf, buton ve etiket metinleri uygulama başlangıcında yüklenen Comfortaa fontunu kullanır; kod editörü/kod blokları okunabilir monospace kalır.
+- Android sohbet ve Kanvas girişlerinde `adjustResize` ile birlikte doğru `KeyboardAvoidingView` yüksekliği uygulanır; klavye görünürken mesajlar ve yazılan metin erişilebilir kalır. Composer sıkı/kompakt yükseklikte kalır; uygulama işletim sistemi klavyesinin kendisini küçültmeye çalışmaz.
+- Sohbet yanıtlarının Markdown kod çitleri seçilebilir, monospace, yüzey içinde gösterilir. Markdown tabloları satır başına mobil uyumlu karta çevrilir: 12 px köşe yarıçapı, hafif yükselti/kenarlık, sol üstte ana başlık, sağ üstte kategori/durum rozeti ve kalan alanlarda etiket-değer detayları.
+- Planlanan yeni parçalar: `components/echo-text.tsx` (fontlu metin/giriş sarmalayıcıları), `components/chat-message-content.tsx` (mesaj bloklarının görünümü) ve `lib/chat-markdown.ts` (Markdown blok ayrıştırma).
 
 ## Teknik kaynaklar
 
