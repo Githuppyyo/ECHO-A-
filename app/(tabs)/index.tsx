@@ -4,15 +4,16 @@ import type { ConversationHandle } from "react-native-litert-lm";
 import { useEffect, useRef, useState } from "react";
 import {
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Text,
-  TextInput,
   View,
 } from "react-native";
 
 import { ChatActivityStatus } from "@/components/chat-activity-status";
+import { ChatMessageContent } from "@/components/chat-message-content";
+import { EchoText as Text, EchoTextInput as TextInput } from "@/components/echo-text";
 import { ChatHistoryDrawer } from "@/components/chat-history-drawer";
 import { useEchoAI } from "@/components/echo-ai-context";
 import { EchoBrand } from "@/components/echo-brand";
@@ -123,6 +124,14 @@ export default function ChatScreen() {
   const conversationsRef = useRef<ChatConversation[]>([]);
   const activeConversationIdRef = useRef<string | null>(null);
   const historyNeedsReplayRef = useRef(false);
+
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    const subscription = Keyboard.addListener("keyboardDidShow", () => {
+      requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
+    });
+    return () => subscription.remove();
+  }, []);
 
   const userBubbleBackground = colorScheme === "dark" ? "#292C30" : "#E8E9EB";
   const userBubbleBorder = colorScheme === "dark" ? "#373A3F" : "#DEE0E3";
@@ -339,7 +348,7 @@ export default function ChatScreen() {
     <ScreenContainer safeAreaClassName="bg-background">
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : Platform.OS === "android" ? "height" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
       >
         <View style={{ flex: 1, paddingHorizontal: 18, paddingTop: 8 }}>
@@ -477,17 +486,12 @@ export default function ChatScreen() {
                           style={{ width: 176, height: 124, borderRadius: 12, backgroundColor: colors.surface }}
                         />
                       ) : null}
-                      {message.content ? (
-                        <Text
-                          selectable
-                          style={{
-                            color: colors.foreground,
-                            fontSize: 15,
-                            lineHeight: 22,
-                          }}
-                        >
+                      {message.content ? fromUser ? (
+                        <Text selectable style={{ color: colors.foreground, fontSize: 15, lineHeight: 23 }}>
                           {message.content}
                         </Text>
+                      ) : (
+                        <ChatMessageContent content={message.content} colors={colors} colorScheme={colorScheme} />
                       ) : null}
                       {!fromUser &&
                       sending &&
@@ -512,8 +516,8 @@ export default function ChatScreen() {
               backgroundColor: colors.surface,
               borderRadius: 22,
               paddingHorizontal: 8,
-              paddingVertical: 7,
-              marginBottom: 8,
+              paddingVertical: 5,
+              marginBottom: 4,
             }}
           >
             {draftImage ? (
@@ -574,15 +578,17 @@ export default function ChatScreen() {
                 placeholderTextColor={colors.muted}
                 multiline
                 maxLength={6000}
+                textAlignVertical="top"
+                onFocus={() => requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }))}
                 style={{
                   flex: 1,
                   color: colors.foreground,
                   fontSize: 15,
-                  lineHeight: 21,
-                  minHeight: 40,
-                  maxHeight: 120,
-                  paddingTop: 9,
-                  paddingBottom: 7,
+                  lineHeight: 22,
+                  minHeight: 36,
+                  maxHeight: 96,
+                  paddingTop: 7,
+                  paddingBottom: 5,
                 }}
               />
               <AnimatedPressable

@@ -1,7 +1,8 @@
 import Constants from "expo-constants";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { AnimatedPressable } from "@/components/animated-pressable";
 
+import { EchoText as Text } from "@/components/echo-text";
 import { useEchoAI } from "@/components/echo-ai-context";
 import { EchoBrand } from "@/components/echo-brand";
 import { ModelInstallCard } from "@/components/model-install-card";

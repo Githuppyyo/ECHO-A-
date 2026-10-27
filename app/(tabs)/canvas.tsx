@@ -7,14 +7,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Text,
-  TextInput,
   View,
 } from "react-native";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 
 import { ChatActivityStatus } from "@/components/chat-activity-status";
+import { EchoText as Text, EchoTextInput as TextInput } from "@/components/echo-text";
 import { useEchoAI } from "@/components/echo-ai-context";
 import { EchoBrand } from "@/components/echo-brand";
 import { ModelInstallCard } from "@/components/model-install-card";
@@ -183,6 +182,7 @@ export default function CanvasScreen() {
         <ScrollView
           contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: 24, gap: 16 }}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
         >
         <EchoBrand subtitle="Yaz, üret, dışa aktar" />
 
