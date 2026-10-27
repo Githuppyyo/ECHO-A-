@@ -1,5 +1,6 @@
-import { Image, Text, View } from "react-native";
+import { Image, View } from "react-native";
 
+import { EchoText as Text } from "@/components/echo-text";
 import { useColors } from "@/hooks/use-colors";
 
 export function EchoBrand({ subtitle }: { subtitle?: string }) {

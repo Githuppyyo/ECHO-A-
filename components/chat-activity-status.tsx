@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 
+import { EchoText as Text } from "@/components/echo-text";
 import { useColors } from "@/hooks/use-colors";
 import { getChatActivityLabel, type ChatActivityKind } from "@/lib/chat-activity";
 

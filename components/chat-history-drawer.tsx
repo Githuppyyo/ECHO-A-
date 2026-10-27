@@ -6,11 +6,11 @@ import {
   Dimensions,
   FlatList,
   Modal,
-  Text,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { EchoText as Text } from "@/components/echo-text";
 import { useColors } from "@/hooks/use-colors";
 import type { ChatConversation } from "@/lib/chat-history";
 

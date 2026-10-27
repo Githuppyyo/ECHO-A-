@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { AnimatedPressable } from "@/components/animated-pressable";
-import { Linking, Text, View } from "react-native";
+import { Linking, View } from "react-native";
 
+import { EchoText as Text } from "@/components/echo-text";
 import { useColors } from "@/hooks/use-colors";
 import { useEchoAI } from "./echo-ai-context";
 
