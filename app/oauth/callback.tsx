@@ -212,27 +212,27 @@ export default function OAuthCallback() {
         {status === "processing" && (
           <>
             <ActivityIndicator size="large" />
-            <Text className="mt-4 text-base leading-6 text-center text-foreground">
+            <Text className="mt-4 text-base leading-6 text-center text-foreground" style={{ fontFamily: "Comfortaa_400Regular" }}>
               Completing authentication...
             </Text>
           </>
         )}
         {status === "success" && (
           <>
-            <Text className="text-base leading-6 text-center text-foreground">
+            <Text className="text-base leading-6 text-center text-foreground" style={{ fontFamily: "Comfortaa_400Regular" }}>
               Authentication successful!
             </Text>
-            <Text className="text-base leading-6 text-center text-foreground">
+            <Text className="text-base leading-6 text-center text-foreground" style={{ fontFamily: "Comfortaa_400Regular" }}>
               Redirecting...
             </Text>
           </>
         )}
         {status === "error" && (
           <>
-            <Text className="mb-2 text-xl font-bold leading-7 text-error">
+            <Text className="mb-2 text-xl font-bold leading-7 text-error" style={{ fontFamily: "Comfortaa_700Bold" }}>
               Authentication failed
             </Text>
-            <Text className="text-base leading-6 text-center text-foreground">
+            <Text className="text-base leading-6 text-center text-foreground" style={{ fontFamily: "Comfortaa_400Regular" }}>
               {errorMessage}
             </Text>
           </>
