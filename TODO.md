@@ -58,6 +58,7 @@
 
 - Uygulamanın genelinde Comfortaa fontunu entegre et. Tüm metin stillerinin (başlıklar, paragraflar, butonlar) bu fonta uyumlu olmasını sağla. Yazıların ekranda net ve okunabilir görünmesini garantile.
 - Mobil klavye açıldığında ekranın sıkışmasını, içeriğin alt alta binmesini veya taşmasını önlemek için dinamik/duyarlı bir yapı kur (örneğin Android için `adjustResize` veya ilgili platforma uygun ekran yüksekliği yönetimi); sohbet ekranında yazılan metin ve gönderme alanı klavyenin üstünde görünür kalsın.
+- Android sistem yazı boyutu büyütülmüş olsa bile sohbet yanıtları ve yazı alanı okunabilir kalmalı; metinler ekran dışına taşmamalı veya birbirinin üstüne binmemelidir. Madde işaretlerinin açıklama metni kaybolmamalı; kimya/matematik denklemleri ham LaTeX komutları olarak görünmemeli.
 - Karmaşık tablolar yerine modern ve mobil uyumlu Kart Yapısını (Card Layout) kullan. Tablodaki her bir satırı yuvarlatılmış köşeli (`border-radius: 12px`), hafif gölgeli ve temiz boşluklara sahip ayrı karta dönüştür.
 - Her kartın sol üstünde ana başlık, sağ üstünde durum/kategori bilgisini gösteren renkli etiket (badge) yer alsın. Detay verileri kart içinde düzenli grid veya alt alta etiket-değer (Key-Value) biçiminde gösterilsin.
 - Genel arayüzde boşlukları (`padding`/`margin`), renk uyumunu ve öğe hizalamalarını güncel mobil tasarım ilkelerine göre optimize et.
