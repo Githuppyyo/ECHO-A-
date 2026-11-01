@@ -3,7 +3,7 @@ import { ScrollView, View } from "react-native";
 
 import { EchoText } from "@/components/echo-text";
 import type { ColorScheme, ThemeColorPalette } from "@/constants/theme";
-import { parseChatMarkdown, type ChatMarkdownBlock } from "@/lib/chat-markdown";
+import { normalizeInlineMath, parseChatMarkdown, type ChatMarkdownBlock } from "@/lib/chat-markdown";
 
 type Props = {
   content: string;
@@ -13,15 +13,16 @@ type Props = {
 };
 
 function inlineNodes(text: string, colors: ThemeColorPalette, selectable: boolean): ReactNode[] {
+  const displayText = normalizeInlineMath(text);
   const tokenPattern = /(\*\*[^*]+\*\*|__[^_]+__|`[^`]+`|\*[^*]+\*|_[^_]+_|!?\[[^\]]+\]\([^)]+\))/g;
   const nodes: ReactNode[] = [];
   let cursor = 0;
   let match: RegExpExecArray | null;
   let key = 0;
 
-  while ((match = tokenPattern.exec(text)) !== null) {
+  while ((match = tokenPattern.exec(displayText)) !== null) {
     if (match.index > cursor) {
-      nodes.push(<EchoText key={`t-${key++}`} selectable={selectable}>{text.slice(cursor, match.index)}</EchoText>);
+      nodes.push(<EchoText key={`t-${key++}`} selectable={selectable}>{displayText.slice(cursor, match.index)}</EchoText>);
     }
     const token = match[0];
     if (token.startsWith("**") || token.startsWith("__")) {
@@ -54,8 +55,8 @@ function inlineNodes(text: string, colors: ThemeColorPalette, selectable: boolea
     cursor = match.index + token.length;
   }
 
-  if (cursor < text.length) {
-    nodes.push(<EchoText key={`t-${key++}`} selectable={selectable}>{text.slice(cursor)}</EchoText>);
+  if (cursor < displayText.length) {
+    nodes.push(<EchoText key={`t-${key++}`} selectable={selectable}>{displayText.slice(cursor)}</EchoText>);
   }
   return nodes;
 }
@@ -226,11 +227,13 @@ function MarkdownBlockView({
     return (
       <View style={{ width: "100%", gap: 6 }}>
         {block.items.map((item, itemIndex) => (
-          <View key={`item-${itemIndex}`} style={{ flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
+          <View key={`item-${itemIndex}`} style={{ width: "100%", flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
             <EchoText style={{ color: colors.primary, fontSize: 14, lineHeight: 22, fontWeight: "700" }}>
               {block.ordered ? `${itemIndex + 1}.` : "•"}
             </EchoText>
-            <InlineText text={item} colors={colors} selectable={selectable} style={{ flex: 1, fontSize: 15, lineHeight: 22 }} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <InlineText text={item} colors={colors} selectable={selectable} style={{ fontSize: 15, lineHeight: 22 }} />
+            </View>
           </View>
         ))}
       </View>

@@ -13,16 +13,31 @@ const FONT_BY_WEIGHT: Record<string, string> = {
   bold: "Comfortaa_700Bold",
 };
 
+// Keep moderate system text enlargement, but prevent extreme scaling from breaking mobile layouts.
+const MAX_FONT_SIZE_MULTIPLIER = 1.3;
+
 function fontFamilyFor(style: StyleProp<TextStyle> | undefined): string {
   const flattened = StyleSheet.flatten(style);
   if (flattened?.fontFamily) return flattened.fontFamily;
   return FONT_BY_WEIGHT[String(flattened?.fontWeight ?? "400")] ?? "Comfortaa_400Regular";
 }
 
-export function EchoText({ style, ...props }: TextProps) {
-  return <NativeText {...props} style={[{ fontFamily: fontFamilyFor(style) }, style]} />;
+export function EchoText({ style, maxFontSizeMultiplier = MAX_FONT_SIZE_MULTIPLIER, ...props }: TextProps) {
+  return (
+    <NativeText
+      {...props}
+      maxFontSizeMultiplier={maxFontSizeMultiplier}
+      style={[{ fontFamily: fontFamilyFor(style) }, style]}
+    />
+  );
 }
 
-export function EchoTextInput({ style, ...props }: TextInputProps) {
-  return <NativeTextInput {...props} style={[{ fontFamily: fontFamilyFor(style) }, style]} />;
+export function EchoTextInput({ style, maxFontSizeMultiplier = MAX_FONT_SIZE_MULTIPLIER, ...props }: TextInputProps) {
+  return (
+    <NativeTextInput
+      {...props}
+      maxFontSizeMultiplier={maxFontSizeMultiplier}
+      style={[{ fontFamily: fontFamilyFor(style) }, style]}
+    />
+  );
 }
