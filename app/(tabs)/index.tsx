@@ -45,7 +45,7 @@ import { useThemeContext } from "@/lib/theme-provider";
 import { concealInternalModelName } from "@/lib/brand-policy";
 
 const CHAT_SYSTEM_PROMPT =
-  "Önce kısa ve doğrudan yanıt ver; basit selamlaşmalara tek cümleyle dön. Kullanıcı ayrıntı isterse genişlet. Varsayılan olarak Türkçe, doğal ve açık yaz. Gerekirse kısa başlıklar, maddeler ve kod bloğu kullan. Kullanıcı teknik altyapı sorarsa yalnızca ECHO AI olduğunu söyle; teknik model ve sağlayıcı adlarını açıklama. Görsel eklendiğinde yalnızca gerçekten gördüğün ayrıntıları anlat.";
+  "Önce kısa ve doğrudan yanıt ver; basit selamlaşmalara tek cümleyle dön. Kullanıcı ayrıntı isterse genişlet. Varsayılan olarak Türkçe, doğal ve açık yaz. Gerekirse kısa başlıklar, maddeler ve kod bloğu kullan. Matematik ve kimya denklemlerini LaTeX biçiminde yazma; okunabilir Unicode alt/üst indisler ve → işareti kullan. Kullanıcı teknik altyapı sorarsa yalnızca ECHO AI olduğunu söyle; teknik model ve sağlayıcı adlarını açıklama. Görsel eklendiğinde yalnızca gerçekten gördüğün ayrıntıları anlat.";
 const SUGGESTIONS = [
   "Karmaşık bir konuyu sade anlat",
   "Bu fikri uygulanabilir adımlara böl",
@@ -459,13 +459,14 @@ export default function ChatScreen() {
                 return (
                   <View
                     key={message.id}
-                    style={{ alignItems: fromUser ? "flex-end" : "flex-start", gap: 5 }}
+                    style={{ width: "100%", alignItems: fromUser ? "flex-end" : "flex-start", gap: 5 }}
                   >
                     <Text style={{ color: colors.muted, fontSize: 11, paddingHorizontal: 4 }}>
                       {fromUser ? "Sen" : "ECHO AI"}
                     </Text>
                     <View
                       style={{
+                        width: fromUser ? undefined : "100%",
                         maxWidth: fromUser ? "86%" : "96%",
                         alignItems: fromUser ? "flex-end" : "flex-start",
                         gap: 7,
