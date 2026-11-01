@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { parseChatMarkdown } from "./chat-markdown";
+import { normalizeInlineMath, parseChatMarkdown } from "./chat-markdown";
 
 describe("parseChatMarkdown", () => {
+  it("formats a LaTeX photosynthesis equation as readable Unicode text", () => {
+    expect(
+      normalizeInlineMath("$6CO_2 + 6H_2O + \\text{Işık Enerjisi} \\rightarrow C_6H_{12}O_6 + 6O_2$"),
+    ).toBe("6CO₂ + 6H₂O + Işık Enerjisi → C₆H₁₂O₆ + 6O₂");
+  });
+
   it("keeps fenced code and its language as a separate block", () => {
     expect(parseChatMarkdown("Örnek:\n\n```ts\nconst x = 1;\n```\n" )).toEqual([
       { type: "paragraph", text: "Örnek:" },
@@ -17,6 +23,13 @@ describe("parseChatMarkdown", () => {
         headers: ["Görev", "Durum", "Süre"],
         rows: [["Tasarım", "Hazır", "2 gün"]],
       },
+    ]);
+  });
+
+  it("keeps every Markdown list description attached to its visible marker", () => {
+    expect(parseChatMarkdown("İşte açıklamalar:\n- **Su:** H₂O.\n- **Işık:** Enerji sağlar." )).toEqual([
+      { type: "paragraph", text: "İşte açıklamalar:" },
+      { type: "list", ordered: false, items: ["**Su:** H₂O.", "**Işık:** Enerji sağlar."] },
     ]);
   });
 
