@@ -6,6 +6,7 @@ import {
   Image,
   Keyboard,
   KeyboardAvoidingView,
+  PermissionsAndroid,
   Platform,
   ScrollView,
   View,
@@ -19,6 +20,7 @@ import { useEchoAI } from "@/components/echo-ai-context";
 import { EchoBrand } from "@/components/echo-brand";
 import { ModelInstallCard } from "@/components/model-install-card";
 import { ScreenContainer } from "@/components/screen-container";
+import { EchoAIOfflineVoice } from "@/modules/echo-ai-downloader/src/offline-voice";
 import { useColors } from "@/hooks/use-colors";
 import {
   getChatThinkingOptions,
@@ -26,7 +28,8 @@ import {
   type ChatActivityKind,
 } from "@/lib/chat-activity";
 import {
-  pickChatImage,
+  MAX_CHAT_IMAGES_PER_MESSAGE,
+  pickChatImages,
   resolveChatImagePath,
   type ChatImageSelection,
 } from "@/lib/chat-images";
@@ -37,6 +40,7 @@ import {
   loadChatHistory,
   saveChatHistory,
   upsertChatConversation,
+  getChatMessageImages,
   type ChatConversation,
   type ChatHistorySnapshot,
   type ChatMessage,
@@ -45,7 +49,7 @@ import { useThemeContext } from "@/lib/theme-provider";
 import { concealInternalModelName } from "@/lib/brand-policy";
 
 const CHAT_SYSTEM_PROMPT =
-  "Önce kısa ve doğrudan yanıt ver; basit selamlaşmalara tek cümleyle dön. Kullanıcı ayrıntı isterse genişlet. Varsayılan olarak Türkçe, doğal ve açık yaz. Gerekirse kısa başlıklar, maddeler ve kod bloğu kullan. Matematik ve kimya denklemlerini LaTeX biçiminde yazma; okunabilir Unicode alt/üst indisler ve → işareti kullan. Kullanıcı teknik altyapı sorarsa yalnızca ECHO AI olduğunu söyle; teknik model ve sağlayıcı adlarını açıklama. Görsel eklendiğinde yalnızca gerçekten gördüğün ayrıntıları anlat.";
+  "Önce kısa ve doğrudan yanıt ver; basit selamlaşmalara tek cümleyle dön. Kullanıcı ayrıntı isterse genişlet. Varsayılan olarak Türkçe, doğal ve açık yaz. Gerekirse kısa başlıklar, maddeler ve kod bloğu kullan. Matematik ve kimya denklemlerini LaTeX biçiminde yazma; okunabilir Unicode alt/üst indisler ve → işareti kullan. Kullanıcı teknik altyapı sorarsa yalnızca ECHO AI olduğunu söyle; teknik model ve sağlayıcı adlarını açıklama. Görsel eklendiğinde yalnızca gerçekten gördüğün ayrıntıları anlat. Sesli mesaj eklendiğinde konuşmayı anlayıp doğal Türkçe yanıt ver.";
 const SUGGESTIONS = [
   "Karmaşık bir konuyu sade anlat",
   "Bu fikri uygulanabilir adımlara böl",
@@ -56,7 +60,7 @@ async function buildConversationParts(
   previousMessages: ChatMessage[],
   currentText: string,
   restoreHistory: boolean,
-  currentImageUri?: string,
+  currentImageUris: string[] = [],
 ): Promise<Parameters<ConversationHandle["execute"]>[0]> {
   const parts: Parameters<ConversationHandle["execute"]>[0] = [];
   if (restoreHistory && previousMessages.length > 0) {
@@ -66,38 +70,48 @@ async function buildConversationParts(
     for (const message of previousMessages.slice(-8)) {
       const speaker = message.role === "user" ? "Kullanıcı" : "ECHO AI";
       const content = message.content.length > 700 ? `${message.content.slice(0, 700)}…` : message.content;
-
-      if (message.imageUri && replayedImages < 2) {
-        const imagePath = await resolveChatImagePath(message.imageUri);
-        if (imagePath) {
-          contextText += `${speaker}: ${content}\n[Önceki görsel ${replayedImages + 1}]\n\n`;
-          parts.push({ type: "text", text: contextText.trim() });
-          parts.push({ type: "image", path: imagePath });
-          contextText = "";
-          replayedImages += 1;
+      const messageImages = getChatMessageImages(message);
+      const attachedPaths: string[] = [];
+      let missingImages = 0;
+      let omittedImages = 0;
+      for (const image of messageImages) {
+        if (replayedImages >= 2) {
+          omittedImages += 1;
           continue;
         }
-        contextText += `${speaker}: ${content}\n[Görsel dosyası bu cihazda bulunamadı]\n\n`;
-        continue;
+        const imagePath = await resolveChatImagePath(image.uri);
+        if (imagePath) {
+          attachedPaths.push(imagePath);
+          replayedImages += 1;
+        } else {
+          missingImages += 1;
+        }
       }
-
-      const imageNote = message.imageUri ? "[Eski görsel bağlam sınırı nedeniyle eklenmedi] " : "";
-      contextText += `${speaker}: ${imageNote}${content}\n\n`;
+      const imageNotes = [
+        attachedPaths.length ? `${attachedPaths.length} önceki görsel eklendi` : "",
+        missingImages ? `${missingImages} görsel dosyası bulunamadı` : "",
+        omittedImages ? `${omittedImages} eski görsel bağlam sınırı nedeniyle eklenmedi` : "",
+      ].filter(Boolean);
+      contextText += `${speaker}: ${content}${imageNotes.length ? `\n[${imageNotes.join("; ")}]` : ""}\n\n`;
+      if (attachedPaths.length) {
+        parts.push({ type: "text", text: contextText.trim() });
+        for (const path of attachedPaths) parts.push({ type: "image", path });
+        contextText = "";
+      }
     }
 
     if (contextText.trim()) parts.push({ type: "text", text: contextText.trim() });
   }
 
-  const currentImagePath = currentImageUri
-    ? await resolveChatImagePath(currentImageUri)
-    : null;
-  if (currentImageUri && !currentImagePath) throw new Error("image-not-found");
-
   parts.push({
     type: "text",
     text: restoreHistory && previousMessages.length > 0 ? `Yeni mesaj:\n${currentText}` : currentText,
   });
-  if (currentImagePath) parts.push({ type: "image", path: currentImagePath });
+  for (const uri of currentImageUris.slice(0, MAX_CHAT_IMAGES_PER_MESSAGE)) {
+    const imagePath = await resolveChatImagePath(uri);
+    if (!imagePath) throw new Error("image-not-found");
+    parts.push({ type: "image", path: imagePath });
+  }
   return parts;
 }
 
@@ -111,8 +125,13 @@ export default function ChatScreen() {
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [historyVisible, setHistoryVisible] = useState(false);
   const [draft, setDraft] = useState("");
-  const [draftImage, setDraftImage] = useState<ChatImageSelection | null>(null);
+  const [draftImages, setDraftImages] = useState<ChatImageSelection[]>([]);
   const [pickingImage, setPickingImage] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [voiceRecording, setVoiceRecording] = useState(false);
+  const [voiceProcessing, setVoiceProcessing] = useState(false);
+  const [voiceOutputEnabled, setVoiceOutputEnabled] = useState(false);
+  const [voiceSeconds, setVoiceSeconds] = useState(0);
   const [sending, setSending] = useState(false);
   const [activity, setActivity] = useState<ChatActivityKind>("thinking");
   const [streamingAssistantId, setStreamingAssistantId] = useState<string | null>(null);
@@ -124,14 +143,37 @@ export default function ChatScreen() {
   const conversationsRef = useRef<ChatConversation[]>([]);
   const activeConversationIdRef = useRef<string | null>(null);
   const historyNeedsReplayRef = useRef(false);
+  const voiceRecordingRef = useRef(false);
+  const voiceElapsedRef = useRef(0);
+  const voiceTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const voiceSpeechIdRef = useRef(0);
 
   useEffect(() => {
     if (Platform.OS === "web") return;
     const subscription = Keyboard.addListener("keyboardDidShow", () => {
+      setKeyboardVisible(true);
       requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
     });
-    return () => subscription.remove();
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false));
+    return () => {
+      subscription.remove();
+      hideSubscription.remove();
+    };
   }, []);
+
+  useEffect(
+    () => () => {
+      if (voiceTimerRef.current) clearInterval(voiceTimerRef.current);
+      if (Platform.OS !== "android") return;
+      if (voiceRecordingRef.current) {
+        voiceRecordingRef.current = false;
+        EchoAIOfflineVoice.cancelOfflineTranscription();
+      }
+      voiceSpeechIdRef.current += 1;
+      EchoAIOfflineVoice.stopSpeaking();
+    },
+    [],
+  );
 
   const userBubbleBackground = colorScheme === "dark" ? "#292C30" : "#E8E9EB";
   const userBubbleBorder = colorScheme === "dark" ? "#373A3F" : "#DEE0E3";
@@ -210,8 +252,14 @@ export default function ChatScreen() {
     persistSnapshot(nextConversations, id);
   };
 
-  const sendMessage = async (value: string, image: ChatImageSelection | null = draftImage) => {
-    const text = value.trim() || (image ? "Bu görseli analiz et." : "");
+  const sendMessage = async (value: string, options: { images?: ChatImageSelection[]; speakResponse?: boolean } = {}) => {
+    const images = (options.images ?? []).slice(0, MAX_CHAT_IMAGES_PER_MESSAGE);
+    const defaultImagePrompt = images.length === 1
+      ? "Bu görseli analiz et."
+      : images.length > 1
+        ? `Bu ${images.length} görseli birlikte analiz et.`
+        : "";
+    const text = value.trim() || defaultImagePrompt;
     if (!text || sending || !historyLoaded || status !== "ready") return;
 
     const conversation = conversationRef.current;
@@ -226,7 +274,9 @@ export default function ChatScreen() {
       id: createMessageId(),
       role: "user",
       content: text,
-      ...(image ? { imageUri: image.uri, imageName: image.name } : {}),
+      ...(images.length > 0
+        ? { imageUris: images.map((image) => image.uri), imageNames: images.map((image) => image.name) }
+        : {}),
     };
     const assistantMessageId = createMessageId();
     const assistantPlaceholder: ChatMessage = {
@@ -240,15 +290,20 @@ export default function ChatScreen() {
     persistConversation(conversationId, nextMessages);
     setError(null);
     setDraft("");
-    setDraftImage(null);
+    setDraftImages([]);
     setSending(true);
-    setActivity(inferChatActivity(text, Boolean(image)));
+    setActivity(inferChatActivity(text, images.length > 0));
     setStreamingAssistantId(assistantMessageId);
     historyNeedsReplayRef.current = false;
     let streamedText = "";
 
     try {
-      const parts = await buildConversationParts(previousMessages, text, restoreHistory, image?.uri);
+      const parts = await buildConversationParts(
+        previousMessages,
+        text,
+        restoreHistory,
+        images.map((image) => image.uri),
+      );
       const response = await conversation.executeWithEvents(
         parts,
         (event) => {
@@ -261,7 +316,7 @@ export default function ChatScreen() {
           messagesRef.current = updatedMessages;
           setMessages(updatedMessages);
         },
-        { thinking: getChatThinkingOptions(text, Boolean(image)) },
+        { thinking: getChatThinkingOptions(text, images.length > 0) },
       );
       const answer = concealInternalModelName(response.trim() || streamedText.trim()).trim();
       if (!answer) throw new Error("empty-response");
@@ -271,6 +326,20 @@ export default function ChatScreen() {
           message.id === assistantMessageId ? { ...message, content: answer } : message,
         ),
       );
+      if ((voiceOutputEnabled || options.speakResponse) && Platform.OS === "android") {
+        const speechId = ++voiceSpeechIdRef.current;
+        void EchoAIOfflineVoice.speakOffline(answer.slice(0, 2800), "tr-TR")
+          .then((spoke) => {
+            if (speechId !== voiceSpeechIdRef.current || spoke) return;
+            setVoiceOutputEnabled(false);
+            setError("Cihazda çevrimdışı Türkçe ses bulunamadı; yazılı yanıt hazır.");
+          })
+          .catch(() => {
+            if (speechId !== voiceSpeechIdRef.current) return;
+            setVoiceOutputEnabled(false);
+            setError("Çevrimdışı seslendirme kullanılamadı; yazılı yanıt hazır.");
+          });
+      }
     } catch {
       if (restoreHistory) historyNeedsReplayRef.current = true;
       const partialAnswer = concealInternalModelName(streamedText.trim()).trim();
@@ -287,8 +356,113 @@ export default function ChatScreen() {
     }
   };
 
+  const stopVoiceCapture = async () => {
+    if (!voiceRecordingRef.current) return;
+    voiceRecordingRef.current = false;
+    if (voiceTimerRef.current) clearInterval(voiceTimerRef.current);
+    voiceTimerRef.current = null;
+    setVoiceRecording(false);
+    setVoiceProcessing(true);
+    setError(null);
+
+    try {
+      const transcript = await EchoAIOfflineVoice.stopOfflineTranscription();
+      if (!transcript.trim()) {
+        setError("Konuşma anlaşılamadı. Tekrar deneyebilir veya yazarak devam edebilirsin.");
+        return;
+      }
+      await sendMessage(transcript.trim(), { images: draftImages, speakResponse: true });
+    } catch {
+      setError("Çevrimdışı konuşma çözümlenemedi. Metin yazarak devam edebilirsin.");
+    } finally {
+      setVoiceProcessing(false);
+    }
+  };
+
+  const startVoiceCapture = async () => {
+    if (
+      Platform.OS !== "android" ||
+      status !== "ready" ||
+      sending ||
+      voiceRecordingRef.current ||
+      voiceProcessing ||
+      !historyLoaded
+    ) return;
+
+    voiceRecordingRef.current = true;
+    setVoiceProcessing(true);
+    try {
+      const recognitionAvailable = await EchoAIOfflineVoice.isOfflineSpeechAvailable("tr-TR");
+      if (!recognitionAvailable) {
+        voiceRecordingRef.current = false;
+        setVoiceProcessing(false);
+        setError("Bu cihazda Türkçe çevrimdışı ses paketi hazır değil. Yazıyla sohbete devam edebilirsin.");
+        return;
+      }
+      const permission = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+        {
+          title: "Mikrofon izni",
+          message: "Sesli mesajını cihazda işlemek için mikrofon erişimi gerekir.",
+          buttonPositive: "İzin ver",
+          buttonNegative: "Vazgeç",
+        },
+      );
+      if (permission !== PermissionsAndroid.RESULTS.GRANTED) {
+        voiceRecordingRef.current = false;
+        setVoiceProcessing(false);
+        setError("Mikrofon izni verilmedi; yazıyla sohbete devam edebilirsin.");
+        return;
+      }
+
+      await EchoAIOfflineVoice.startOfflineTranscription("tr-TR");
+      if (!voiceRecordingRef.current) {
+        EchoAIOfflineVoice.cancelOfflineTranscription();
+        return;
+      }
+      setVoiceProcessing(false);
+      setVoiceRecording(true);
+      setVoiceSeconds(0);
+      voiceElapsedRef.current = 0;
+      voiceTimerRef.current = setInterval(() => {
+        if (!voiceRecordingRef.current) return;
+        voiceElapsedRef.current += 1;
+        const elapsed = voiceElapsedRef.current;
+        setVoiceSeconds(Math.min(elapsed, 45));
+        if (elapsed >= 45) void stopVoiceCapture();
+      }, 1000);
+    } catch {
+      voiceRecordingRef.current = false;
+      setVoiceRecording(false);
+      setVoiceProcessing(false);
+      EchoAIOfflineVoice.cancelOfflineTranscription();
+      setError("Çevrimdışı konuşma başlatılamadı. Metin yazarak devam edebilirsin.");
+    }
+  };
+
+  const toggleVoiceOutput = async () => {
+    if (Platform.OS !== "android") return;
+    if (voiceOutputEnabled) {
+      voiceSpeechIdRef.current += 1;
+      EchoAIOfflineVoice.stopSpeaking();
+      setVoiceOutputEnabled(false);
+      return;
+    }
+    try {
+      const voice = await EchoAIOfflineVoice.getOfflineVoice("tr-TR");
+      if (!voice.available) {
+        setError("Cihazda çevrimdışı Türkçe ses bulunamadı. Yazılı yanıtlar kullanılabilir.");
+        return;
+      }
+      setError(null);
+      setVoiceOutputEnabled(true);
+    } catch {
+      setError("Çevrimdışı ses durumu okunamadı; yazılı sohbet kullanılabilir.");
+    }
+  };
+
   const startNewChat = async () => {
-    if (sending || !historyLoaded) return;
+    if (sending || voiceRecording || voiceProcessing || !historyLoaded) return;
     const previous = conversationRef.current;
     conversationRef.current = null;
     if (previous) await previous.release().catch(() => undefined);
@@ -301,12 +475,12 @@ export default function ChatScreen() {
     setError(null);
     setHistoryError(null);
     setDraft("");
-    setDraftImage(null);
+    setDraftImages([]);
     persistSnapshot(conversationsRef.current, null);
   };
 
   const selectConversation = async (selected: ChatConversation) => {
-    if (sending || !historyLoaded) return;
+    if (sending || voiceRecording || voiceProcessing || !historyLoaded) return;
     const previous = conversationRef.current;
     conversationRef.current = null;
     if (previous) await previous.release().catch(() => undefined);
@@ -317,20 +491,21 @@ export default function ChatScreen() {
     messagesRef.current = selected.messages;
     setMessages(selected.messages);
     setDraft("");
-    setDraftImage(null);
+    setDraftImages([]);
     setError(null);
     setHistoryError(null);
     persistSnapshot(conversationsRef.current, selected.id);
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: false }), 60);
   };
 
-  const chooseImage = async () => {
-    if (status !== "ready" || sending || pickingImage || !historyLoaded) return;
+  const chooseImages = async () => {
+    const remaining = MAX_CHAT_IMAGES_PER_MESSAGE - draftImages.length;
+    if (status !== "ready" || sending || voiceRecording || voiceProcessing || pickingImage || !historyLoaded || remaining <= 0) return;
     setPickingImage(true);
     setError(null);
     try {
-      const image = await pickChatImage();
-      if (image) setDraftImage(image);
+      const images = await pickChatImages(remaining);
+      if (images.length) setDraftImages((current) => [...current, ...images].slice(0, MAX_CHAT_IMAGES_PER_MESSAGE));
     } catch {
       setError("Görsel eklenemedi. Başka bir görsel seçip yeniden deneyebilirsin.");
     } finally {
@@ -342,7 +517,9 @@ export default function ChatScreen() {
     status === "ready" &&
     historyLoaded &&
     !sending &&
-    (Boolean(draft.trim()) || Boolean(draftImage));
+    !voiceRecording &&
+    !voiceProcessing &&
+    (Boolean(draft.trim()) || draftImages.length > 0);
 
   return (
     <ScreenContainer safeAreaClassName="bg-background">
@@ -386,7 +563,7 @@ export default function ChatScreen() {
             <AnimatedPressable
               accessibilityRole="button"
               accessibilityLabel="Yeni sohbet başlat"
-              disabled={sending || !historyLoaded}
+              disabled={sending || voiceRecording || voiceProcessing || !historyLoaded}
               onPress={() => void startNewChat()}
               hitSlop={6}
               style={({ pressed }) => ({
@@ -398,7 +575,7 @@ export default function ChatScreen() {
                 backgroundColor: colors.surface,
                 alignItems: "center",
                 justifyContent: "center",
-                opacity: sending || !historyLoaded ? 0.62 : pressed ? 0.78 : 1,
+                opacity: sending || voiceRecording || voiceProcessing || !historyLoaded ? 0.62 : pressed ? 0.78 : 1,
               })}
             >
               <Ionicons name="create-outline" size={22} color={colors.foreground} />
@@ -428,7 +605,7 @@ export default function ChatScreen() {
                       <AnimatedPressable
                         key={suggestion}
                         accessibilityRole="button"
-                        onPress={() => void sendMessage(suggestion, null)}
+                        onPress={() => void sendMessage(suggestion)}
                         style={({ pressed }) => ({
                           borderWidth: 1,
                           borderColor: colors.border,
@@ -456,6 +633,7 @@ export default function ChatScreen() {
             ) : (
               messages.map((message) => {
                 const fromUser = message.role === "user";
+                const messageImages = getChatMessageImages(message);
                 return (
                   <View
                     key={message.id}
@@ -479,13 +657,18 @@ export default function ChatScreen() {
                         borderColor: userBubbleBorder,
                       }}
                     >
-                      {message.imageUri ? (
-                        <Image
-                          source={{ uri: message.imageUri }}
-                          accessibilityLabel={message.imageName ?? "Sohbette paylaşılan görsel"}
-                          resizeMode="cover"
-                          style={{ width: 176, height: 124, borderRadius: 12, backgroundColor: colors.surface }}
-                        />
+                      {messageImages.length > 0 ? (
+                        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+                          {messageImages.map((image, index) => (
+                            <Image
+                              key={`${message.id}-image-${index}`}
+                              source={{ uri: image.uri }}
+                              accessibilityLabel={image.name}
+                              resizeMode="cover"
+                              style={{ width: 128, height: 94, borderRadius: 12, backgroundColor: colors.surface }}
+                            />
+                          ))}
+                        </View>
                       ) : null}
                       {message.content ? fromUser ? (
                         <Text selectable style={{ color: colors.foreground, fontSize: 15, lineHeight: 23 }}>
@@ -518,62 +701,130 @@ export default function ChatScreen() {
               borderRadius: 22,
               paddingHorizontal: 8,
               paddingVertical: 5,
-              marginBottom: 4,
+              marginBottom: keyboardVisible ? 20 : 4,
             }}
           >
-            {draftImage ? (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 9, paddingHorizontal: 4, paddingTop: 3 }}>
-                <Image
-                  source={{ uri: draftImage.uri }}
-                  accessibilityLabel="Eklenecek görsel"
-                  resizeMode="cover"
-                  style={{ width: 48, height: 48, borderRadius: 10, backgroundColor: colors.background }}
-                />
-                <Text numberOfLines={1} style={{ flex: 1, color: colors.muted, fontSize: 12 }}>
-                  {draftImage.name}
-                </Text>
-                <AnimatedPressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Görseli kaldır"
-                  onPress={() => setDraftImage(null)}
-                  style={{ padding: 7 }}
-                >
-                  <Ionicons name="close-circle" size={20} color={colors.muted} />
-                </AnimatedPressable>
-              </View>
+            {draftImages.length > 0 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8, paddingHorizontal: 4, paddingTop: 3 }}
+              >
+                {draftImages.map((image, index) => (
+                  <View key={`${image.uri}-${index}`} style={{ width: 76, gap: 3 }}>
+                    <View>
+                      <Image
+                        source={{ uri: image.uri }}
+                        accessibilityLabel={`Eklenecek görsel ${index + 1}`}
+                        resizeMode="cover"
+                        style={{ width: 76, height: 54, borderRadius: 10, backgroundColor: colors.background }}
+                      />
+                      <AnimatedPressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`${image.name} görselini kaldır`}
+                        onPress={() => setDraftImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                        style={({ pressed }) => ({
+                          position: "absolute",
+                          right: 2,
+                          top: 2,
+                          width: 22,
+                          height: 22,
+                          borderRadius: 11,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: "rgba(0,0,0,0.68)",
+                          opacity: pressed ? 0.72 : 1,
+                        })}
+                      >
+                        <Ionicons name="close" size={15} color="#fff" />
+                      </AnimatedPressable>
+                    </View>
+                    <Text numberOfLines={1} style={{ color: colors.muted, fontSize: 10 }}>{image.name}</Text>
+                  </View>
+                ))}
+              </ScrollView>
+            ) : null}
+            {voiceRecording || voiceProcessing ? (
+              <Text style={{ color: voiceRecording ? colors.primary : colors.muted, fontSize: 12, paddingHorizontal: 4 }}>
+                {voiceRecording
+                  ? `Dinleme · ${String(Math.floor(voiceSeconds / 60)).padStart(2, "0")}:${String(voiceSeconds % 60).padStart(2, "0")} / 00:45 · durdurunca gönderilir`
+                  : "Konuşma cihazda çevrimdışı metne çevriliyor…"}
+              </Text>
             ) : null}
             <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 7 }}>
               {Platform.OS === "android" ? (
-                <AnimatedPressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Görsel ekle"
-                  disabled={status !== "ready" || sending || pickingImage || !historyLoaded}
-                  onPress={() => void chooseImage()}
-                  style={({ pressed }) => ({
-                    width: 38,
-                    height: 42,
-                    borderRadius: 14,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    backgroundColor: colors.surface,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity: status !== "ready" || sending || pickingImage || !historyLoaded ? 0.62 : pressed ? 0.78 : 1,
-                  })}
-                >
-                  <Ionicons name={pickingImage ? "ellipsis-horizontal" : "image-outline"} size={21} color={colors.muted} />
-                </AnimatedPressable>
+                <>
+                  <AnimatedPressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Görsel ekle, ${draftImages.length}/${MAX_CHAT_IMAGES_PER_MESSAGE} seçili`}
+                    disabled={status !== "ready" || sending || voiceRecording || voiceProcessing || pickingImage || !historyLoaded || draftImages.length >= MAX_CHAT_IMAGES_PER_MESSAGE}
+                    onPress={() => void chooseImages()}
+                    style={({ pressed }) => ({
+                      width: 38,
+                      height: 42,
+                      borderRadius: 14,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      backgroundColor: colors.surface,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: status !== "ready" || sending || voiceRecording || voiceProcessing || pickingImage || !historyLoaded || draftImages.length >= MAX_CHAT_IMAGES_PER_MESSAGE ? 0.62 : pressed ? 0.78 : 1,
+                    })}
+                  >
+                    <Ionicons name={pickingImage ? "ellipsis-horizontal" : "image-outline"} size={21} color={colors.muted} />
+                  </AnimatedPressable>
+                  <AnimatedPressable
+                    accessibilityRole="button"
+                    accessibilityLabel={voiceRecording ? "Konuşmayı durdur ve gönder" : "Çevrimdışı konuşmaya başla"}
+                    disabled={!voiceRecording && (status !== "ready" || sending || voiceProcessing || !historyLoaded)}
+                    onPress={() => voiceRecording ? void stopVoiceCapture() : void startVoiceCapture()}
+                    style={({ pressed }) => ({
+                      width: 38,
+                      height: 42,
+                      borderRadius: 14,
+                      borderWidth: 1,
+                      borderColor: voiceRecording ? colors.error : colors.border,
+                      backgroundColor: voiceRecording ? colors.error : colors.surface,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: !voiceRecording && (status !== "ready" || sending || voiceProcessing || !historyLoaded) ? 0.62 : pressed ? 0.78 : 1,
+                    })}
+                  >
+                    <Ionicons name={voiceRecording ? "stop" : "mic-outline"} size={20} color={voiceRecording ? colors.background : colors.muted} />
+                  </AnimatedPressable>
+                  <AnimatedPressable
+                    accessibilityRole="button"
+                    accessibilityLabel={voiceOutputEnabled ? "Çevrimdışı sesli yanıtı kapat" : "Çevrimdışı sesli yanıtı aç"}
+                    disabled={status !== "ready" || sending || voiceRecording || voiceProcessing || !historyLoaded}
+                    onPress={() => void toggleVoiceOutput()}
+                    style={({ pressed }) => ({
+                      width: 38,
+                      height: 42,
+                      borderRadius: 14,
+                      borderWidth: 1,
+                      borderColor: voiceOutputEnabled ? colors.primary : colors.border,
+                      backgroundColor: voiceOutputEnabled ? `${colors.primary}22` : colors.surface,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: status !== "ready" || sending || voiceRecording || voiceProcessing || !historyLoaded ? 0.62 : pressed ? 0.78 : 1,
+                    })}
+                  >
+                    <Ionicons name={voiceOutputEnabled ? "volume-high" : "volume-mute"} size={20} color={voiceOutputEnabled ? colors.primary : colors.muted} />
+                  </AnimatedPressable>
+                </>
               ) : null}
               <TextInput
                 accessibilityLabel="Mesajını yaz"
                 value={draft}
                 onChangeText={setDraft}
-                editable={status === "ready" && historyLoaded && !sending}
+                editable={status === "ready" && historyLoaded && !sending && !voiceRecording && !voiceProcessing}
                 placeholder={
                   !historyLoaded
                     ? "Sohbet geçmişi yükleniyor..."
-                    : status === "ready"
-                      ? "Mesajını yaz..."
+                    : voiceRecording
+                      ? "Kaydediliyor..."
+                      : status === "ready"
+                        ? "Mesajını yaz..."
                       : "Önce ECHO AI'yi kur"
                 }
                 placeholderTextColor={colors.muted}
@@ -596,7 +847,7 @@ export default function ChatScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Mesajı gönder"
                 disabled={!canSend}
-                onPress={() => void sendMessage(draft, draftImage)}
+                onPress={() => void sendMessage(draft, { images: draftImages })}
                 style={({ pressed }) => ({
                   width: 40,
                   height: 42,
@@ -619,7 +870,7 @@ export default function ChatScreen() {
         visible={historyVisible}
         conversations={conversations}
         activeConversationId={activeConversationId}
-        actionsDisabled={sending || !historyLoaded}
+        actionsDisabled={sending || voiceRecording || voiceProcessing || !historyLoaded}
         onClose={() => setHistoryVisible(false)}
         onNewChat={() => void startNewChat()}
         onSelect={(conversation) => void selectConversation(conversation)}

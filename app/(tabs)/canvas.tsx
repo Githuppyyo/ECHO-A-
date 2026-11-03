@@ -14,6 +14,7 @@ import * as Sharing from "expo-sharing";
 
 import { ChatActivityStatus } from "@/components/chat-activity-status";
 import { EchoText as Text, EchoTextInput as TextInput } from "@/components/echo-text";
+import { OfflineImageGenerator } from "@/components/offline-image-generator";
 import { useEchoAI } from "@/components/echo-ai-context";
 import { EchoBrand } from "@/components/echo-brand";
 import { ModelInstallCard } from "@/components/model-install-card";
@@ -22,7 +23,7 @@ import { useColors } from "@/hooks/use-colors";
 import { concealInternalModelName } from "@/lib/brand-policy";
 
 const DRAFT_STORAGE_KEY = "@echoai/canvas-draft-v1";
-type CanvasMode = "text" | "code";
+type CanvasMode = "text" | "code" | "image";
 type CanvasDraft = { title: string; content: string; mode: CanvasMode };
 
 function escapeHtml(value: string): string {
@@ -84,7 +85,7 @@ export default function CanvasScreen() {
         const parsed = JSON.parse(stored) as Partial<CanvasDraft>;
         if (typeof parsed.title === "string") setTitle(parsed.title);
         if (typeof parsed.content === "string") setContent(parsed.content);
-        if (parsed.mode === "text" || parsed.mode === "code") setMode(parsed.mode);
+        if (parsed.mode === "text" || parsed.mode === "code" || parsed.mode === "image") setMode(parsed.mode);
       })
       .catch(() => undefined)
       .finally(() => {
@@ -106,7 +107,7 @@ export default function CanvasScreen() {
 
   const generateDraft = async () => {
     const request = prompt.trim();
-    if (!request || status !== "ready" || generating) return;
+    if (!request || mode === "image" || status !== "ready" || generating) return;
 
     const systemPrompt = mode === "code"
       ? "Kanvas için çalışıyorsun. İstekten doğru dilde, çalışır ve temiz bir kod taslağı üret. Kod modunda yalnızca kodu döndür; Markdown kod çiti, model/sağlayıcı adı veya gereksiz açıklama ekleme."
@@ -145,7 +146,7 @@ export default function CanvasScreen() {
   };
 
   const exportPdf = async () => {
-    if (!content.trim() || exporting) return;
+    if (!content.trim() || mode === "image" || exporting) return;
     if (Platform.OS !== "android") {
       setNotice("PDF dışa aktarımı Android uygulamasında kullanılabilir.");
       return;
@@ -189,7 +190,7 @@ export default function CanvasScreen() {
         <View style={{ gap: 5 }}>
           <Text style={{ color: colors.foreground, fontSize: 28, fontWeight: "800" }}>Kanvas</Text>
           <Text style={{ color: colors.muted, fontSize: 14, lineHeight: 20 }}>
-            Metinini veya kodunu hazırla. İstersen taslağı PDF olarak paylaş.
+            Metin, kod veya çevrimdışı vektör illüstrasyon üret. Metin ve kod taslaklarını PDF olarak paylaş.
           </Text>
         </View>
 
@@ -220,7 +221,7 @@ export default function CanvasScreen() {
             accessibilityRole="tablist"
             style={{ flexDirection: "row", padding: 4, borderRadius: 13, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
           >
-            {(["text", "code"] as const).map((option) => {
+            {(["text", "code", "image"] as const).map((option) => {
               const selected = mode === option;
               return (
                 <AnimatedPressable
@@ -240,42 +241,47 @@ export default function CanvasScreen() {
                   }}
                 >
                   <Text style={{ color: selected ? colors.background : colors.muted, fontWeight: "700", fontSize: 13 }}>
-                    {option === "text" ? "Metin" : "Kod"}
+                    {option === "text" ? "Metin" : option === "code" ? "Kod" : "Görsel"}
                   </Text>
                 </AnimatedPressable>
               );
             })}
           </View>
 
-          <TextInput
-            accessibilityLabel={mode === "code" ? "Kod taslağı" : "Metin taslağı"}
-            value={content}
-            onChangeText={setContent}
-            placeholder={mode === "code" ? "Kodunu buraya yaz..." : "Taslağını buraya yaz..."}
-            placeholderTextColor={colors.muted}
-            multiline
-            textAlignVertical="top"
-            autoCapitalize="none"
-            autoCorrect={mode !== "code"}
-            spellCheck={mode !== "code"}
-            style={{
-              minHeight: 230,
-              color: colors.foreground,
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-              borderWidth: 1,
-              borderRadius: 16,
-              padding: 14,
-              fontSize: mode === "code" ? 13 : 15,
-              lineHeight: mode === "code" ? 20 : 23,
-              fontFamily: mode === "code" ? "monospace" : undefined,
-            }}
-          />
-          <Text style={{ color: colors.muted, fontSize: 11 }}>
-            Taslak cihazında otomatik saklanır.
-          </Text>
+          {mode !== "image" ? (
+            <>
+              <TextInput
+                accessibilityLabel={mode === "code" ? "Kod taslağı" : "Metin taslağı"}
+                value={content}
+                onChangeText={setContent}
+                placeholder={mode === "code" ? "Kodunu buraya yaz..." : "Taslağını buraya yaz..."}
+                placeholderTextColor={colors.muted}
+                multiline
+                textAlignVertical="top"
+                autoCapitalize="none"
+                autoCorrect={mode !== "code"}
+                spellCheck={mode !== "code"}
+                style={{
+                  minHeight: 230,
+                  color: colors.foreground,
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                  borderWidth: 1,
+                  borderRadius: 16,
+                  padding: 14,
+                  fontSize: mode === "code" ? 13 : 15,
+                  lineHeight: mode === "code" ? 20 : 23,
+                  fontFamily: mode === "code" ? "monospace" : undefined,
+                }}
+              />
+              <Text style={{ color: colors.muted, fontSize: 11 }}>
+                Taslak cihazında otomatik saklanır.
+              </Text>
+            </>
+          ) : null}
         </View>
 
+        {mode === "image" ? <OfflineImageGenerator /> : (
         <View style={{ gap: 9, borderRadius: 18, padding: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
           <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: "700" }}>ECHO AI&apos;ye hazırla</Text>
           <TextInput
@@ -317,9 +323,10 @@ export default function CanvasScreen() {
             </Text>
           </AnimatedPressable>
         </View>
+        )}
 
-        {exporting ? <ChatActivityStatus activity="pdf" label="PDF oluşturuluyor…" /> : null}
-        <AnimatedPressable
+        {mode !== "image" && exporting ? <ChatActivityStatus activity="pdf" label="PDF oluşturuluyor…" /> : null}
+        {mode !== "image" ? <AnimatedPressable
           accessibilityRole="button"
           onPress={() => void exportPdf()}
           disabled={!content.trim() || exporting || Platform.OS !== "android"}
@@ -340,7 +347,7 @@ export default function CanvasScreen() {
           <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: "700" }}>
             {exporting ? "İşlem sürüyor..." : "PDF oluştur"}
           </Text>
-        </AnimatedPressable>
+        </AnimatedPressable> : null}
 
         {notice ? <Text accessibilityLiveRegion="polite" style={{ color: colors.muted, fontSize: 13, lineHeight: 19 }}>{notice}</Text> : null}
         {Platform.OS === "web" ? (
