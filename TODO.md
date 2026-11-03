@@ -46,15 +46,16 @@
 - EAS `preview` profiliyle Android APK başarıyla üretildi: build `aa0b5c9b-8900-4800-8102-8edbbc954acd`, 70.2 MiB. APK'nın arşiv bütünlüğü, Android manifesti ve DEX dosyaları doğrulandı.
 - Bu APK, buton görünürlüğü, token-token sohbet yanıtı ve klavye düzeni düzeltmelerinden önceki commit'ten üretildi; aşağıdaki güncel APK maddesinin yerine geçmez.
 
-## 6. [ ] Güncel arayüzü içeren Android preview APK
+## 6. [x] Güncel arayüzü içeren Android preview APK
 
-- Güncel kaynakta Android `versionCode: 2`, görünür tema butonları, sohbet yanıt akışı ve klavye resize düzeni vardır. Bu değişiklikleri içeren yeni APK henüz üretilmedi. EAS CLI/CI için Expo tokenı gerekir; Expo takım projesindeki `Build from GitHub` yolu da yalnızca GitHub organizasyon reposunu kabul eder ve Expo GitHub App bağlantısı ister. Bağlı GitHub hesabında şu an görünür organizasyon/depo adayı yok; kişisel hesapta repo oluşturmak bu Expo takım projesine bağlanmayacağı için yapılmaz. Derleme ya doğru, döndürülmüş Developer robot tokenı güvenli kartta sağlandıktan sonra ya da kullanıcı erişilebilir GitHub organizasyonunu bildirip Expo GitHub App bağlantısına açıkça onay verdikten sonra başlatılabilir.
+- Güncel arayüz ve okunabilirlik düzeltmeleri EAS `preview` profiliyle Android `1.0.0 (versionCode 4)` APK olarak üretildi ve kullanıcıya indirilebilir dosya olarak verildi. Kaynak GitHub `main` commit'i `97bfc23`; EAS build `e8ed39ae-f3cf-4200-bda0-57cc8acc2f2f` başarılı oldu.
 
 ## 7. [ ] Native Android gerçek cihaz yürütmesi
 
 - Sandbox'ta Android SDK ve test cihazı olmadığından APK fiziksel cihazda açılmadı. Android 13+ izin istemi, uygulama kapalıyken DownloadManager devamı, tek seferlik indirme/dosya doğrulaması, çevrimdışı AI, PDF paylaşım paneli ve launcher ikonu cihazda çalıştırılmadı; kaynak kodu/önizleme bu davranışların gerçek cihazda kanıtı değildir.
+- Yeni sürümdeki 45 saniyelik cihaz içi ses kaydı/çevrimdışı seslendirme, çoklu görsel seçimi, SVG illüstrasyon kaydetme/paylaşma ve klavye açıkken 16 dp ek boşluk da gerçek Android cihazında henüz doğrulanmadı; başarılı EAS derlemesi paketlemeyi doğrular, fiziksel davranışı değil.
 
-## 8. [ ] Comfortaa, sohbet kartları ve klavye UX güncellemesi
+## 8. [x] Comfortaa, sohbet kartları ve klavye UX güncellemesi
 
 - Uygulamanın genelinde Comfortaa fontunu entegre et. Tüm metin stillerinin (başlıklar, paragraflar, butonlar) bu fonta uyumlu olmasını sağla. Yazıların ekranda net ve okunabilir görünmesini garantile.
 - Mobil klavye açıldığında ekranın sıkışmasını, içeriğin alt alta binmesini veya taşmasını önlemek için dinamik/duyarlı bir yapı kur (örneğin Android için `adjustResize` veya ilgili platforma uygun ekran yüksekliği yönetimi); sohbet ekranında yazılan metin ve gönderme alanı klavyenin üstünde görünür kalsın.
@@ -62,3 +63,32 @@
 - Karmaşık tablolar yerine modern ve mobil uyumlu Kart Yapısını (Card Layout) kullan. Tablodaki her bir satırı yuvarlatılmış köşeli (`border-radius: 12px`), hafif gölgeli ve temiz boşluklara sahip ayrı karta dönüştür.
 - Her kartın sol üstünde ana başlık, sağ üstünde durum/kategori bilgisini gösteren renkli etiket (badge) yer alsın. Detay verileri kart içinde düzenli grid veya alt alta etiket-değer (Key-Value) biçiminde gösterilsin.
 - Genel arayüzde boşlukları (`padding`/`margin`), renk uyumunu ve öğe hizalamalarını güncel mobil tasarım ilkelerine göre optimize et.
+
+## 9. [ ] İnternetsiz sesli sohbet
+
+- Kullanıcı Android sohbet ekranında mikrofon düğmesine dokunarak Android'in cihaz içi ses tanımasını başlatıp durdurabilir; mikrofon izni yalnızca bu eylem sırasında istenir. Android 13+ ve kurulu Türkçe çevrimdışı tanıma dili yoksa kayıt başlatılmaz ve kullanıcıya neden açıklanır.
+- Konuşma en fazla 45 saniyede cihazda yazıya çevrilir; bu metin yalnızca cihazdaki yerel ECHO AI metin modeline verilir. Ham ses dosyası kaydedilmez, uygulama sunucusuna/harici servise gönderilmez, destek bulunmadığında çevrimiçi tanımaya geçilmez ve dil modeli indirmesi tetiklenmez.
+- ECHO AI yanıtını yalnızca cihazda kurulu, ağ gerektirmeyen Türkçe TTS sesi seslendirir; çevrimdışı ses yoksa yazılı yanıt korunur ve kullanıcıya eksik ses paketi açıkça bildirilir. Sesli mesajdan sonra yanıt otomatik seslendirilir; metin yanıtları için ayrıca çevrimdışı ses düğmesi bulunur.
+- Cihazda çevrimdışı Türkçe tanıma desteklenmiyorsa kullanıcı yazıyla sohbete devam eder; hiçbir çevrimiçi ses/tanıma yedeği kullanılmaz.
+
+## 10. [ ] Bir sohbette birden fazla görsel
+
+- Kullanıcı Android görsel seçicisinden tek bir sohbete bir seferde en fazla dört görsel ekleyebilir; her seçilen görselin küçük önizlemesi görünür ve kullanıcı göndermeden önce her görseli ayrı ayrı kaldırabilir.
+- Seçilen görseller cihazın uygulamaya özel dosya alanına kopyalanır ve yerel çok kipli AI'ye tek bir istekte gönderilir; görsel veya görsel bağlamı hiçbir sunucuya yüklenmez.
+- Sohbet geçmişi seçilen tüm görsellerin yerel yolunu saklar; konuşma yeniden açıldığında bütün küçük önizlemeler gösterilir ve model bağlamı için önceki görsellerden en fazla ikisi belleği sınırlamak amacıyla yeniden eklenir. Önceden kaydedilmiş `imageUri`/`imageName` biçimindeki tek-görsel kayıtları da açılmaya devam eder.
+
+## 11. [ ] Çevrimdışı görsel oluşturma ve kaydetme
+
+- Kanvas'a Görsel modu eklenir; kullanıcı bir tarif girip yerel AI'den çevrimdışı vektör illüstrasyon/poster oluşturabilir, sonucu uygulama içinde önizleyebilir ve Android paylaşım menüsünden SVG dosyası olarak kaydedebilir/paylaşabilir.
+- Model çıktısı izin verilen çizim öğeleri ve renklerle sınırlandırılır; keyfî SVG, betik veya harici bağlantı çalıştırılmaz, çevrimiçi görsel oluşturma servisi kullanılmaz ve yeni çok-gigabayt model kullanıcı onayı olmadan indirilmez.
+- Bu sürüm fotoğraf-gerçekçi raster üretim vaat etmez; oluşturulan çıktı cihazda hazırlanmış SVG vektör illüstrasyonudur.
+
+## 12. [ ] Klavye açıkken yazma alanını daha yukarı taşı
+
+- Android klavyesi açıldığında sohbet yazma alanı ve gönder düğmesi normal klavye üstü konumundan yaklaşık 16 dp daha yukarıda kalır; yazılan metin tam görünür ve klavye tarafından örtülmez.
+- Var olan `softwareKeyboardLayoutMode: resize`, klavye açıkken alt sekmeleri gizleme ve içerik yeniden boyutlandırma davranışı korunur.
+
+## 13. [ ] Güncellenmiş Android APK
+
+- Yeni native özellikler Android-only `preview` APK içinde derlenir; `app.config.ts` Android `versionCode` değeri 4'ten 5'e yükseltilir ve mevcut uygulama kimliği/şeması korunur.
+- EAS `Build from GitHub` yoluyla yalnızca Android hedeflenir; mağazaya otomatik gönderim yapılmaz. Build sonucu başarılı olmadıkça dosya tamamlandı olarak sunulmaz.

@@ -82,8 +82,8 @@ const config: ExpoConfig & { logoUrl: string } = {
     },
     predictiveBackGestureEnabled: false,
     package: env.androidPackage,
-    versionCode: 4,
-    permissions: ["POST_NOTIFICATIONS"],
+    versionCode: 5,
+    permissions: ["POST_NOTIFICATIONS", "RECORD_AUDIO"],
     intentFilters: [
       {
         action: "VIEW",
@@ -123,7 +123,7 @@ const config: ExpoConfig & { logoUrl: string } = {
       "expo-image-picker",
       {
         cameraPermission: false,
-        microphonePermission: false,
+        microphonePermission: "ECHO AI, sesli mesajlarını cihazında çevrimdışı işlemek için mikrofona erişir.",
       },
     ],
     "react-native-litert-lm",
