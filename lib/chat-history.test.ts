@@ -13,6 +13,7 @@ vi.mock("@react-native-async-storage/async-storage", () => ({
 
 import {
   createConversationTitle,
+  getChatMessageImages,
   loadChatHistory,
   saveChatHistory,
   upsertChatConversation,
@@ -51,6 +52,44 @@ describe("local chat history", () => {
     const restored = await loadChatHistory();
     expect(restored.activeConversationId).toBe("conversation-1");
     expect(restored.conversations[0]?.messages).toEqual(messages);
+  });
+
+  it("round-trips multiple local images and still reads legacy single-image records", async () => {
+    const multiImageMessage: ChatMessage = {
+      id: "user-multi",
+      role: "user",
+      content: "Karşılaştır",
+      imageUris: ["file:///images/a.jpg", "file:///images/b.jpg"],
+      imageNames: ["a.jpg", "b.jpg"],
+    };
+    const legacyMessage: ChatMessage = {
+      id: "user-legacy",
+      role: "user",
+      content: "Bu nedir?",
+      imageUri: "file:///images/old.jpg",
+      imageName: "old.jpg",
+    };
+    await saveChatHistory({
+      version: 1,
+      activeConversationId: "conversation-2",
+      conversations: [{
+        id: "conversation-2",
+        title: "Karşılaştır",
+        updatedAt: 456,
+        messages: [multiImageMessage, legacyMessage],
+      }],
+    });
+
+    const restored = await loadChatHistory();
+    const restoredMessages = restored.conversations[0]?.messages ?? [];
+    expect(restoredMessages[0]).toEqual(multiImageMessage);
+    expect(getChatMessageImages(restoredMessages[0]!)).toEqual([
+      { uri: "file:///images/a.jpg", name: "a.jpg" },
+      { uri: "file:///images/b.jpg", name: "b.jpg" },
+    ]);
+    expect(getChatMessageImages(restoredMessages[1]!)).toEqual([
+      { uri: "file:///images/old.jpg", name: "old.jpg" },
+    ]);
   });
 
   it("creates a readable title and preserves other conversations when upserting", () => {

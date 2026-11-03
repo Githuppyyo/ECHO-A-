@@ -8,7 +8,23 @@ export type ChatMessage = {
   content: string;
   imageUri?: string;
   imageName?: string;
+  imageUris?: string[];
+  imageNames?: string[];
 };
+
+export type ChatMessageImage = { uri: string; name: string };
+
+export function getChatMessageImages(message: Pick<ChatMessage, "imageUri" | "imageName" | "imageUris" | "imageNames">): ChatMessageImage[] {
+  if (message.imageUris?.length) {
+    return message.imageUris.slice(0, 4).map((uri, index) => ({
+      uri,
+      name: message.imageNames?.[index]?.trim() || `Görsel ${index + 1}`,
+    }));
+  }
+  return message.imageUri
+    ? [{ uri: message.imageUri, name: message.imageName?.trim() || "Seçilen görsel" }]
+    : [];
+}
 
 export type ChatConversation = {
   id: string;
@@ -41,7 +57,7 @@ export function createMessageId(): string {
 export function createConversationTitle(messages: ChatMessage[]): string {
   const firstUserMessage = messages.find((message) => message.role === "user");
   const title = firstUserMessage?.content.replace(/\s+/g, " ").trim();
-  if (!title && firstUserMessage?.imageUri) return "Görsel analizi";
+  if (!title && firstUserMessage && getChatMessageImages(firstUserMessage).length > 0) return "Görsel analizi";
   if (!title) return "Yeni sohbet";
   return title.length > 42 ? `${title.slice(0, 39).trimEnd()}…` : title;
 }
@@ -79,12 +95,21 @@ function parseMessage(value: unknown): ChatMessage | null {
     return null;
   }
 
+  const imageUris = Array.isArray(record.imageUris)
+    ? record.imageUris.filter((uri): uri is string => typeof uri === "string").slice(0, 4)
+    : [];
+  const imageNames = Array.isArray(record.imageNames)
+    ? record.imageNames.filter((name): name is string => typeof name === "string").slice(0, 4)
+    : [];
+
   return {
     id: record.id,
     role: record.role,
     content: record.content,
     ...(typeof record.imageUri === "string" ? { imageUri: record.imageUri } : {}),
     ...(typeof record.imageName === "string" ? { imageName: record.imageName } : {}),
+    ...(imageUris.length > 0 ? { imageUris } : {}),
+    ...(imageNames.length > 0 ? { imageNames } : {}),
   };
 }
 
