@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { EchoText as Text } from "@/components/echo-text";
 import { useColors } from "@/hooks/use-colors";
+import { getChatMessageImages } from "@/lib/chat-history";
 import type { ChatConversation } from "@/lib/chat-history";
 
 type Props = {
@@ -40,7 +41,7 @@ function formatConversationDate(timestamp: number): string {
 function conversationPreview(conversation: ChatConversation): string {
   const lastMessage = conversation.messages[conversation.messages.length - 1];
   if (!lastMessage) return "Henüz mesaj yok";
-  const prefix = lastMessage.imageUri ? "Görsel · " : "";
+  const prefix = getChatMessageImages(lastMessage).length > 0 ? "Görsel · " : "";
   return `${prefix}${lastMessage.content}`.replace(/\s+/g, " ").trim();
 }
 
