@@ -1,6 +1,9 @@
 {
   "platforms": ["android"],
   "android": {
-    "modules": ["expo.modules.echoaidownloader.EchoAIDownloaderModule"]
+    "modules": [
+      "expo.modules.echoaidownloader.EchoAIDownloaderModule",
+      "expo.modules.echoaidownloader.EchoAIOfflineVoiceModule"
+    ]
   }
 }
