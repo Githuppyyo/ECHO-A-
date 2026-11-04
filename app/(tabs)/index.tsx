@@ -396,7 +396,7 @@ export default function ChatScreen() {
       if (!recognitionAvailable) {
         voiceRecordingRef.current = false;
         setVoiceProcessing(false);
-        setError("Bu cihazda Türkçe çevrimdışı ses paketi hazır değil. Yazıyla sohbete devam edebilirsin.");
+        setError("Uygulama içi Türkçe çevrimdışı konuşma modeli kullanılamadı. Yazıyla sohbete devam edebilirsin.");
         return;
       }
       const permission = await PermissionsAndroid.request(
@@ -436,7 +436,7 @@ export default function ChatScreen() {
       setVoiceRecording(false);
       setVoiceProcessing(false);
       EchoAIOfflineVoice.cancelOfflineTranscription();
-      setError("Çevrimdışı konuşma başlatılamadı. Metin yazarak devam edebilirsin.");
+      setError("Uygulama içi çevrimdışı mikrofon modeli başlatılamadı. Metin yazarak devam edebilirsin.");
     }
   };
 
