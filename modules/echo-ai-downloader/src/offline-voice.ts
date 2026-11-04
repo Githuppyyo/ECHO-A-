@@ -7,7 +7,7 @@ export type OfflineVoiceAvailability = {
 };
 
 type EchoAIOfflineVoiceModule = {
-  /** True only when Android reports an installed on-device Turkish recognition language. */
+  /** True when the Android APK contains the bundled Turkish offline recognition model. */
   isOfflineSpeechAvailable(languageTag: string): Promise<boolean>;
   /** Resolves when the on-device recognizer has started listening. */
   startOfflineTranscription(languageTag: string): Promise<void>;
