@@ -57,9 +57,9 @@ class EchoAIOfflineVoiceModule : Module() {
       onMain {
         val session = transcription
         if (session == null) {
-          promise.reject("E_NO_ACTIVE_SPEECH", "No offline speech transcription is active")
+          promise.reject("E_NO_ACTIVE_SPEECH", "No offline speech transcription is active", null)
         } else if (session.stopPromise != null) {
-          promise.reject("E_SPEECH_BUSY", "Offline speech recognition is already stopping")
+          promise.reject("E_SPEECH_BUSY", "Offline speech recognition is already stopping", null)
         } else {
           session.stopPromise = promise
           when {
@@ -182,30 +182,31 @@ class EchoAIOfflineVoiceModule : Module() {
 
   private fun beginOfflineTranscription(languageTag: String, promise: Promise) {
     if (destroyed) {
-      promise.reject("E_MODULE_DESTROYED", "Offline voice module has been destroyed")
+      promise.reject("E_MODULE_DESTROYED", "Offline voice module has been destroyed", null)
       return
     }
     if (transcription != null) {
-      promise.reject("E_SPEECH_BUSY", "Offline speech transcription is already in progress")
+      promise.reject("E_SPEECH_BUSY", "Offline speech transcription is already in progress", null)
       return
     }
     val context = appContextOrNull()
     if (context == null) {
-      promise.reject("E_OFFLINE_SPEECH_UNAVAILABLE", "Application context is unavailable")
+      promise.reject("E_OFFLINE_SPEECH_UNAVAILABLE", "Application context is unavailable", null)
       return
     }
     if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-      promise.reject("E_RECORD_AUDIO_PERMISSION", "Microphone permission is required for offline transcription")
+      promise.reject("E_RECORD_AUDIO_PERMISSION", "Microphone permission is required for offline transcription", null)
       return
     }
 
     checkTurkishSpeechSupport(languageTag) { available ->
       if (destroyed) {
-        promise.reject("E_MODULE_DESTROYED", "Offline voice module has been destroyed")
+        promise.reject("E_MODULE_DESTROYED", "Offline voice module has been destroyed", null)
       } else if (!available) {
         promise.reject(
           "E_OFFLINE_SPEECH_UNAVAILABLE",
           "On-device Turkish speech recognition is unavailable; install the Turkish offline language pack in Android settings",
+          null,
         )
       } else {
         startRecognizer(context, promise)
@@ -215,7 +216,7 @@ class EchoAIOfflineVoiceModule : Module() {
 
   private fun startRecognizer(context: Context, promise: Promise) {
     if (transcription != null) {
-      promise.reject("E_SPEECH_BUSY", "Offline speech transcription is already in progress")
+      promise.reject("E_SPEECH_BUSY", "Offline speech transcription is already in progress", null)
       return
     }
     val recognizer = try {
