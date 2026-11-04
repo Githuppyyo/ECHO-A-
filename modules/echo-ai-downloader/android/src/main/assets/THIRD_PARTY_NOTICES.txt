@@ -1,0 +1,21 @@
+ECHO AI — THIRD-PARTY NOTICES
+
+The Android application includes an offline Turkish speech-recognition model and its Android runtime. Speech recognition executes on the device; the application does not send microphone audio to a network service.
+
+Turkish offline speech model
+Model: vosk-model-small-tr-0.3
+Catalog/source: https://alphacephei.com/vosk/models
+Model package: https://alphacephei.com/vosk/models/vosk-model-small-tr-0.3.zip
+License: Apache License, Version 2.0. The model archive includes its original README. A copy of the license is provided as LICENSE-2.0.txt.
+
+Android recognition runtime
+Project: Vosk API / Android wrapper, https://github.com/alphacep/vosk-api
+Artifact: com.alphacephei:vosk-android:0.3.75
+License: Apache License, Version 2.0. A copy is provided as LICENSE-2.0.txt.
+
+Native access dependency
+Project: Java Native Access (JNA), https://github.com/java-native-access/jna
+Artifact: net.java.dev.jna:jna:5.18.1
+JNA is distributed under the Apache License, Version 2.0, or the GNU Lesser General Public License, Version 2.1. This build uses the Apache-2.0-compatible distribution option.
+
+These notices do not alter the applicable third-party license terms. The package's user-facing screens use ECHO AI branding; third-party names appear only in these license notices.
