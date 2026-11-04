@@ -64,12 +64,12 @@
 - Her kartın sol üstünde ana başlık, sağ üstünde durum/kategori bilgisini gösteren renkli etiket (badge) yer alsın. Detay verileri kart içinde düzenli grid veya alt alta etiket-değer (Key-Value) biçiminde gösterilsin.
 - Genel arayüzde boşlukları (`padding`/`margin`), renk uyumunu ve öğe hizalamalarını güncel mobil tasarım ilkelerine göre optimize et.
 
-## 9. [ ] İnternetsiz sesli sohbet
+## 9. [ ] İnternetsiz sesli sohbet (APK içine gömülü Türkçe tanıma modeli)
 
-- Kullanıcı Android sohbet ekranında mikrofon düğmesine dokunarak Android'in cihaz içi ses tanımasını başlatıp durdurabilir; mikrofon izni yalnızca bu eylem sırasında istenir. Android 13+ ve kurulu Türkçe çevrimdışı tanıma dili yoksa kayıt başlatılmaz ve kullanıcıya neden açıklanır.
-- Konuşma en fazla 45 saniyede cihazda yazıya çevrilir; bu metin yalnızca cihazdaki yerel ECHO AI metin modeline verilir. Ham ses dosyası kaydedilmez, uygulama sunucusuna/harici servise gönderilmez, destek bulunmadığında çevrimiçi tanımaya geçilmez ve dil modeli indirmesi tetiklenmez.
-- ECHO AI yanıtını yalnızca cihazda kurulu, ağ gerektirmeyen Türkçe TTS sesi seslendirir; çevrimdışı ses yoksa yazılı yanıt korunur ve kullanıcıya eksik ses paketi açıkça bildirilir. Sesli mesajdan sonra yanıt otomatik seslendirilir; metin yanıtları için ayrıca çevrimdışı ses düğmesi bulunur.
-- Cihazda çevrimdışı Türkçe tanıma desteklenmiyorsa kullanıcı yazıyla sohbete devam eder; hiçbir çevrimiçi ses/tanıma yedeği kullanılmaz.
+- Kullanıcı Android sohbet ekranında mikrofon düğmesine dokunarak APK içinde paketlenmiş Türkçe konuşma tanıma motorunu başlatıp durdurabilir; mikrofon izni yalnızca bu eylem sırasında istenir. Türkçe tanıma modeli uygulamayla birlikte gelir; Android ayarlarından veya uygulama içinden ayrı bir Türkçe STT dil paketi indirmek gerekmez.
+- Konuşma en fazla 45 saniyede cihazda yazıya çevrilir; bu metin yalnızca cihazdaki yerel ECHO AI metin modeline verilir. Ham ses dosyası kaydedilmez, uygulama sunucusuna/harici servise gönderilmez, çevrimiçi tanımaya geçilmez ve mikrofon kullanımı model/ağ indirmesi başlatmaz. İlk mikrofon kullanımında gömülü model uygulamanın özel depolamasına yerel olarak çıkarılır ve sonraki kullanımlar için saklanır.
+- ECHO AI yanıtını yalnızca cihazda kurulu, ağ gerektirmeyen Türkçe TTS sesi seslendirir; çevrimdışı TTS sesi yoksa yazılı yanıt korunur ve kullanıcıya eksik ses paketinin ayrı olduğu açıkça bildirilir. Sesli mesajdan sonra yanıt otomatik seslendirilir; metin yanıtları için ayrıca çevrimdışı ses düğmesi bulunur.
+- Cihazda çevrimdışı Türkçe TTS bulunmuyorsa kullanıcı yazıyla ve APK içindeki STT modeliyle sohbete devam eder; hiçbir çevrimiçi ses/tanıma yedeği kullanılmaz.
 
 ## 10. [ ] Bir sohbette birden fazla görsel
 
@@ -88,7 +88,7 @@
 - Android klavyesi açıldığında sohbet yazma alanı ve gönder düğmesi normal klavye üstü konumundan yaklaşık 16 dp daha yukarıda kalır; yazılan metin tam görünür ve klavye tarafından örtülmez.
 - Var olan `softwareKeyboardLayoutMode: resize`, klavye açıkken alt sekmeleri gizleme ve içerik yeniden boyutlandırma davranışı korunur.
 
-## 13. [ ] Güncellenmiş Android APK
+## 13. [ ] Güncellenmiş Android APK (gömülü Türkçe mikrofon modeli)
 
-- Yeni native özellikler Android-only `preview` APK içinde derlenir; `app.config.ts` Android `versionCode` değeri 4'ten 5'e yükseltilir ve mevcut uygulama kimliği/şeması korunur.
-- EAS `Build from GitHub` yoluyla yalnızca Android hedeflenir; mağazaya otomatik gönderim yapılmaz. Build sonucu başarılı olmadıkça dosya tamamlandı olarak sunulmaz.
+- Güncel native özellikler ve APK'ya gömülü Türkçe çevrimdışı STT modeli Android-only EAS `preview` APK içinde derlenir; `app.config.ts` Android `versionCode` değeri 5'ten 6'ya yükselir ve mevcut uygulama kimliği/scheme korunur.
+- EAS `Build from GitHub` yoluyla yalnızca Android hedeflenir; mağazaya otomatik gönderim yapılmaz. Build sonucu başarılı olmadıkça APK tamamlandı olarak sunulmaz.
