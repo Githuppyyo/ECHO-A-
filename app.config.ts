@@ -82,7 +82,7 @@ const config: ExpoConfig & { logoUrl: string } = {
     },
     predictiveBackGestureEnabled: false,
     package: env.androidPackage,
-    versionCode: 6,
+    versionCode: 7,
     permissions: ["POST_NOTIFICATIONS", "RECORD_AUDIO"],
     intentFilters: [
       {
