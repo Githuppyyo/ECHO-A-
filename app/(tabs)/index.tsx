@@ -701,7 +701,7 @@ export default function ChatScreen() {
               borderRadius: 22,
               paddingHorizontal: 8,
               paddingVertical: 5,
-              marginBottom: keyboardVisible ? 20 : 4,
+              marginBottom: keyboardVisible ? 32 : 4,
             }}
           >
             {draftImages.length > 0 ? (
