@@ -101,6 +101,7 @@ export default function RootLayout() {
           <QueryClientProvider client={queryClient}>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="image-studio" />
               <Stack.Screen name="oauth/callback" />
             </Stack>
             <StatusBar style="auto" />
