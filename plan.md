@@ -20,13 +20,13 @@ Kullanıcının arayüz kuralı: teknik model adı kullanıcıya dönük arayüz
 ## Android ve önizleme sınırları
 
 - Sabit Expo Router / React Native / TypeScript / NativeWind başlangıcı korunur. `expo.platforms` yalnızca Android ve arayüz önizlemesi için Web olarak ayarlanır; iOS hedeflenmez.
-- Yerel çıkarım/DownloadManager Expo Go'da doğrulanamaz; özel Android native derlemesi gerekir. Web önizlemesi üç sekmenin arayüzünü gösterebilir ancak cihaz içi AI ve Android indirme bildirimi çalıştırmaz. Android 13+ bildirim izin istemi kullanıcı indirme eylemiyle açılır. `softwareKeyboardLayoutMode: "resize"`, Android `KeyboardAvoidingView`, klavye açıkken gizlenen sekme çubuğu ve composer'a verilen ek 16 dp boşluk sohbet/kanvas girişlerinin görünür kalmasını sağlar. Gerçek bildirim/uygulama kapatma, çevrimdışı ses, çoklu görsel, SVG paylaşımı ve klavye davranışı fiziksel ARM64 Android cihazda doğrulanmalıdır.
+- Yerel çıkarım/DownloadManager Expo Go'da doğrulanamaz; özel Android native derlemesi gerekir. Web önizlemesi üç sekmenin arayüzünü gösterebilir ancak cihaz içi AI ve Android indirme bildirimi çalıştırmaz. Android 13+ bildirim izin istemi kullanıcı indirme eylemiyle açılır. `softwareKeyboardLayoutMode: "resize"`, Android `KeyboardAvoidingView`, klavye açıkken gizlenen sekme çubuğu ve composer'ın normal klavye üstü konumuna göre toplam yaklaşık 28 dp yukarı taşınması sohbet/kanvas girişlerinin görünür kalmasını sağlar. Gerçek bildirim/uygulama kapatma, çevrimdışı ses, çoklu görsel, SVG paylaşımı ve klavye davranışı fiziksel ARM64 Android cihazda doğrulanmalıdır.
 - Native çalışma tabanı Android API 26+ ve `arm64-v8a`'dır. İndirilen ağırlıklar uygulamaya özel depolamadadır; uygulamanın kaldırılması veya verilerinin temizlenmesi yerel modeli ve taslağı siler, yeni kurulum gerekebilir.
 - İlk indirme yaklaşık 3,65 GB'tır; kitaplığın E4B için önerdiği bellek tabanı 6 GB+ RAM'dir. Kullanıcıya boyut ve çevrimdışı kullanım indirmenin öncesinde gösterilir. Android sistem bildirimi “ECHO AI kuruluyor...” metnini ve transfer ilerlemesini taşır; `DownloadManager` bağlantı değişikliklerinde yeniden dener ve uzun transferi uygulama sürecinden bağımsız yönetir. Kullanıcı uygulamayı normal biçimde kapatırsa transfer korunur; sistem ayarlarından zorla durdurma ayrı bir sınırdır.
 
 ## Ekran akışları ve dosya yapısı
 
-- `app/(tabs)/index.tsx`: Türkçe sohbet; gri kullanıcı balonları, yan panelden yerel sohbet geçmişi, en fazla dört görselin eklenmesi/önizlemesi/tek tek kaldırılması ve yerel analiz; Android'de yerel mikrofon kaydı ve yalnız çevrimdışı Türkçe sesle yanıt; token geldikçe açılan yanıt; klavye görünürken 16 dp daha yukarı taşınan composer. İndirme sürerken diğer sekmeler kullanılabilir.
+- `app/(tabs)/index.tsx`: Türkçe sohbet; gri kullanıcı balonları, yan panelden yerel sohbet geçmişi, en fazla dört görselin eklenmesi/önizlemesi/tek tek kaldırılması ve yerel analiz; Android'de yerel mikrofon kaydı ve yalnız çevrimdışı Türkçe sesle yanıt; token geldikçe açılan yanıt; klavye görünürken normal klavye üstü konumuna göre toplam yaklaşık 28 dp yukarı taşınan composer. İndirme sürerken diğer sekmeler kullanılabilir.
 - `components/chat-history-drawer.tsx`: sohbet geçmişini seçme ve yeni sohbet başlatma için soldan açılan panel.
 - `components/chat-activity-status.tsx`: sohbet ve Kanvas eylemlerinde kısa, erişilebilir üretim durumu göstergesi.
 - `components/animated-pressable.tsx`, `components/screen-container.tsx` ve `components/haptic-tab.tsx`: ana eylemlerde hafif basma/ripple, ekran girişinde kısa fade-kayma ve alt sekme geri bildirimi.
@@ -87,7 +87,7 @@ Kullanıcının arayüz kuralı: teknik model adı kullanıcıya dönük arayüz
 - **Klavye alanı:** Sohbet klavyesi görünürken giriş alanı normal konumundan 16 dp yukarı alınır; yazı ve gönderme düğmesi görünür kalır.
 - **Android sürümü:** Mevcut paket ve scheme korunur; yeni APK için `versionCode` 5 olur. Yalnız Android EAS `preview` APK hedeflenir.
 
-Bu özellik kapsamı ve bağımsız kabul ölçütleri `TODO.md`'ye kaydedildi; uygulama koduna eklendi. Mevcut Comfortaa, koyu/açık tema, kart düzeni, üç alt sekme ve animasyon dili korunur. Kurulu Türkçe çevrimdışı ses paketi, gerçek ses kaydı/çözümleme ve cihaz davranışları yalnız fiziksel Android testinde doğrulanabilir. Testler, TypeScript, lint ve Expo yapılandırması kod düzenlemeleri tamamlandıktan sonra yeniden çalıştırılacaktır; GitHub üzerinden Android `preview` APK derlemesi de kalan teslim aşamasıdır.
+Bu özellik kapsamı ve bağımsız kabul ölçütleri `TODO.md`'ye kaydedildi; uygulama koduna eklendi. Mevcut Comfortaa, koyu/açık tema, kart düzeni, üç alt sekme ve animasyon dili korunur. Kurulu Türkçe çevrimdışı ses paketi, gerçek ses kaydı/çözümleme ve cihaz davranışları yalnız fiziksel Android testinde doğrulanabilir. VersionCode 6 Android `preview` APK'si üretildi ve teslim edildi; bu küçük v7 güncellemesinde mevcut 16 dp composer yükseltmesine yaklaşık 12 dp daha eklenerek toplam yaklaşık 28 dp hedeflenir. Klavye davranışı fiziksel Android cihazda ayrıca doğrulanmalıdır.
 
 ## Sürüm 1.0.0 (versionCode 6) — APK içinde Türkçe konuşma tanıma
 
@@ -95,3 +95,49 @@ Bu özellik kapsamı ve bağımsız kabul ölçütleri `TODO.md`'ye kaydedildi; 
 - Mikrofon izni yalnızca kullanıcı mikrofona dokunduğunda istenir; kayıt en fazla 45 saniye sürer. Ses geçici olarak cihaz içi tanımaya aktarılır, ham ses dosyası kaydedilmez ve ağ servisine gönderilmez. Tanınan metin mevcut cihaz içi ECHO AI modeline verilir.
 - Mevcut çevrimdışı TTS ayrı kalır; cihazda kurulu çevrimdışı Türkçe TTS sesi yoksa metin yanıtı korunur ve kullanıcıya seslendirme desteğinin STT modelinden bağımsız olduğu bildirilir.
 - Android `versionCode` 6 olur; mevcut package/scheme ve diğer çevrimdışı sohbet özellikleri korunur. Yalnızca Android `preview` APK üretilir. APK boyutu, gömülü Türkçe model nedeniyle v5'e göre en az yaklaşık 35 MB artar.
+
+
+## Sürüm 8 planı — ayrı, çevrimdışı PNG Görsel Kanvası
+
+### Ürün akışı
+
+v7'deki Metin/Kod/PDF Kanvası korunur. Mevcut Kanvas ekranındaki Görsel seçeneği SVG çizim sahnesi yerine ayrı bir **Görsel Kanvası** ekranını açar; ana sekme sayısı üç olarak kalır. Görsel alanı, ECHO AI markalı ayrı bir model-indirme kartı, Türkçe prompt alanı, üretim durumu ve PNG önizleme/kaydetme/paylaşma akışı içerir. Yeni görsel özelliğinin çıktısı PNG olur; kullanıcıya SVG üretildiği söylenmez. Comfortaa, monokrom tema, mevcut kart düzeni ve hafif animasyon dili sürdürülür. Kullanıcı arayüzü ve sistem bildirimi hiçbir teknik model/sağlayıcı adı göstermez.
+
+Görsel üretim modeli APK içine gömülmez. Uygulama kurulduktan sonra kullanıcı Görsel Kanvası'nda model indirmeyi kendisi başlatır; indirme boyutu ve gereken depolama alanı önceden gösterilir. Görsel modeli, mevcut çevrimdışı sohbet modelinden ayrı dosya, yol, durum ve doğrulama kaydına sahiptir; kurulu sohbet modeli tekrar indirilmez. Görsel modeli başarıyla indirildikten ve bütünlüğü doğrulandıktan sonra prompt ve resim çıkarımı internet erişmeden Android cihazda çalışır. İlk kapsam 512×512 PNG üretimi ve Android sistem paylaşım/kaydetme akışıdır.
+
+### Uygulama yaklaşımı ve proje yapısı
+
+- `app/(tabs)/canvas.tsx` mevcut Metin/Kod/PDF görevlerini sürdürür; Görsel seçeneği ayrı ekrana yönlendirir. `app/_layout.tsx` içinde `image-studio` bir Stack ekranı olarak tanımlanır; `app/(tabs)/_layout.tsx` üç ana sekmeyi korur.
+- Yeni `app/image-studio.tsx` ayrı, tek-elle kullanılabilir görsel alanını taşır. `components/image-model-card.tsx` indir/durum/ilerleme/hata ve depolama bilgisini; `components/image-canvas-preview.tsx` yerel PNG önizleme ve paylaşma/kaydetme eylemlerini sağlar. Mevcut `components/offline-image-generator.tsx` ve `lib/offline-image-art.ts` v7 SVG akışına aittir; yeni PNG akışı bu çizim-sahnesi yolunu kullanmaz.
+- Yeni `modules/echo-ai-imagegen/` Android Expo/Kotlin modülü görsel modelinin ayrı DownloadManager görevini, uygulama özel depolamasını, boyut/SHA-256 doğrulamasını ve cihaz içi çıkarım köprüsünü yönetir. Mevcut `modules/echo-ai-downloader` sohbet modeline ait sabit dosya adı, tek indirme kimliği, boyut ve hash içerdiğinden iki büyük modelin durumunu birbirine karıştırmamak için bağımsız modül tercih edilir.
+- Çıkarım eşzamanlı MediaPipe API'sinin UI'yi dondurmaması için tek bir Android arka plan yürütücüsünde çalışır; iptal/kaynak bırakma akışı tanımlanır. Mevcut `expo-file-system`/`expo-sharing` çözümleri uygunsa PNG dosyasını yerelde tutup Android paylaşım paneline verir; yeni bağımlılık ve native Gradle uyumluluğu ancak prototipte doğrulandıktan sonra sabitlenir.
+
+### Model ve dağıtım sınırları
+
+İlk prototip adayı, Android'de çevrimdışı metinden görsel üreten MediaPipe Image Generator ile uyumlu, fotoğraf-gerçekçiliği hedefleyen SD 1.5 tabanlı ağırlıklardır. Ancak resmi görev sayfası Image Generator'ı deprecated/aktif bakımı olmayan ve üst seviye cihazlara yönelik olarak işaretliyor. Resmi Android codelab'i en az 8 GB RAM'li fiziksel cihazı öneriyor. Referans ham checkpoint 4,27 GB ve CreativeML OpenRAIL-M lisanslıdır; bu checkpoint MediaPipe'a doğrudan yüklenmez, dönüştürülmesi gerekir. Dönüştürülmüş dağıtım paketinin boyutu henüz ölçülmemiştir ve sabit, indirilebilir bir hazır paket/hosting kaynağı bulunamamıştır. Bu nedenle v8 arayüzünde gerçek boyut ancak dönüştürülmüş paket hazırlandıktan sonra gösterilir; geçerli HTTPS indirme adresi, sabit revision, ölçülmüş bayt sayısı, SHA-256 ve lisans incelemesi olmadan özellik tamamlanmış sayılmaz. Ayrıntılı kaynaklar `research-offline-png-feasibility.md` dosyasındadır.
+
+Google'ın MobileDiffusion araştırması daha hızlı bir yön gösterse de yayınlanan resmî yazıda uygulamaya indirilebilir ağırlık paketi veya entegrasyon yolu yoktur; bu yüzden ilk teslimat modeli olarak seçilmez. Fotoğraf-gerçekçiliği hedefi garanti değildir: v8 kapsamı 512×512 ile sınırlıdır; üretim hızı, bellek, ısınma ve sonuç kalitesi 8 GB+ RAM'li gerçek ARM64 Android cihazlarda görülmeden daha geniş cihaz desteği veya kesin süre vaadi verilmez. Lisans/uygulama koşulları kullanıcıya uygun biçimde gösterilir; ücretsiz model erişimi lisans koşullarını ortadan kaldırmaz.
+
+İlk doğrulama aşaması yalnızca dönüştürülmüş ağırlıkların dağıtımı ve gerçek cihazda bir PNG üretilebildiğini kanıtlayan teknik prototiptir. Bu prototip başarıya ulaşmadan büyük model indirme altyapısı ve tam Görsel Kanvası arayüzü v8 APK'sına eklenmez. v8 dağıtımı Android-only `preview` APK olur; mevcut uygulama kimliği/scheme korunur ve `versionCode` 7'den 8'e yükseltilir. Hiçbir görüntü üretimi ücretli API'ye veya bulut yedeğine düşmez.
+
+## V8 uygulama kararı — önceki MediaPipe önerisinin yerini alır
+
+Önceki MediaPipe seçimi yalnızca fizibilite adayıydı; uygulama yolu olarak kullanılmayacaktır. Kullanıcı, ayrı indirilen çevrimdışı görsel modelini ve yeni Android APK'yı başlatmayı onayladı. Önceki “yalnızca prototip” bekleme koşulu bu kapsam için kaldırılmıştır: ayrı görsel ekranı, model indiricisi ve yerel üretim şimdi uygulanacaktır. Gerçek cihazda PNG üretimi doğrulanmadan başarı/uyumluluk iddiası yapılmayacaktır.
+
+### Model, çalışma motoru ve lisans akışı
+
+- Model deposu `NishQ1/vora-create-sd15`, değişmez revizyon `990b82c686c3c047df2f1926460b4915773d64c5` olarak sabitlenir. Q8_0 GGUF dosyası 1.802.206.336 bayt, SHA-256 `dd06826d1eca711efa38190395a5ee949d0427fc6422c39433358a815e5b066c`; TAESD tamamlayıcı dosyası 9.793.292 bayt, SHA-256 `db169d69145ec4ff064e49d99c95fa05d3eb04ee453de35824a6d0f325513549`. Birlikte indirme yaklaşık 1,812 GB'tır. Model ücretsiz indirilebilir; lisans koşulları kabul edilmeden indirme ve üretim açılmaz.
+- Çıkarım motoru `stable-diffusion.cpp` commit `58bb3c1b1cd4749e94e39f537e9adfce295dcaee` olup Android `arm64-v8a` için derlenir. JNI köprüsü 512×512 çözünürlük, LCM örnekleyici, dört adım ve CFG 1 ayarlarıyla tek PNG üretir. İşlem arka planda yürür; iptal, hata ve ekran kapanışı durumlarında native bağlam ve görüntü belleği serbest bırakılır. Başka bir Flutter uygulamasının arayüz/kodu kopyalanmaz.
+- `modules/echo-ai-imagegen/` mevcut sohbet-modeli indiricisinden ayrı kalır. Android DownloadManager ile kullanıcı başlatmalı, Wi‑Fi varsayılanlı ve uygulama kapandıktan sonra sürebilen indirme; indirilen iki dosya için tam boyut/SHA‑256 doğrulaması; yerel üretim köprüsü bu modülde tutulur. Model APK'ya gömülmez.
+- İlk indirmeden önce model lisansının tam metni ve gerekli açık kaynak bildirimleri uygulama içi hukuki bilgilendirme ekranında gösterilir ve açık kullanıcı kabulü alınır. Normal görsel ekranı, indirme bildirimi ve olağan hata mesajlarında teknik model/sağlayıcı adı gösterilmez; ECHO AI markası korunur. Hukuki metinlerde gerekli kaynak/isim bildirimleri bulunur.
+- İlk model indirmesi dışında ağ kullanılmaz. Prompt ve sonuç görseli cihazda kalır; bulut servisi, ücretli API veya çevrimiçi yedekleme yolu eklenmez. Bütünlük doğrulaması geçmeyen model çalıştırılmaz.
+
+### Ekran ve proje yapısı
+
+`app/(tabs)/canvas.tsx` metin, kod ve PDF akışlarını korur; Görsel seçeneği ayrı `app/image-studio.tsx` ekranını açar ve üç ana sekme değişmez. `components/image-model-card.tsx` ECHO AI indirme/lisans/durum, boyut, boş alan ve ilerleme bilgilerini; `components/image-canvas-preview.tsx` PNG önizleme ve Android paylaşım/kaydetme akışını sunar. `lib/imagegen.ts` ekranın kullandığı tipli köprü olur. `modules/echo-ai-imagegen/android/` DownloadManager, lisans kabulü, Kotlin Expo modülü ve C++/JNI çıkarımını kapsar. Eski SVG bileşeni ve yardımcıları PNG üretim yolunda kullanılmaz.
+
+### Cihaz ve teslim sınırları
+
+İlk sürüm 512×512 PNG üretir. Model kartındaki kalite beyanı fotogerçekçilik garantisi değildir; hız ve kalite cihaza bağlıdır. İlk fiziksel kontroller en az 8 GB RAM'li ARM64 Android cihazda yapılır; alt bellekli cihazlara destek sözü verilmez. İndirmeden önce tam boyut ve kullanılabilir alan gösterilir; bozuk/kesilmiş dosya yeniden indirilmeden model hazır görünmez. Android package/scheme korunur, `versionCode` 7'den 8'e yükseltilir ve yalnızca mağazaya gönderilmeyen EAS `preview` APK hazırlanır.
+
+Ayrıntılı teknik kaynaklar, SHA değerleri ve lisans URL'leri `research-offline-png-feasibility.md` içindedir.

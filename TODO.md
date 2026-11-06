@@ -53,7 +53,7 @@
 ## 7. [ ] Native Android gerçek cihaz yürütmesi
 
 - Sandbox'ta Android SDK ve test cihazı olmadığından APK fiziksel cihazda açılmadı. Android 13+ izin istemi, uygulama kapalıyken DownloadManager devamı, tek seferlik indirme/dosya doğrulaması, çevrimdışı AI, PDF paylaşım paneli ve launcher ikonu cihazda çalıştırılmadı; kaynak kodu/önizleme bu davranışların gerçek cihazda kanıtı değildir.
-- Yeni sürümdeki 45 saniyelik cihaz içi ses kaydı/çevrimdışı seslendirme, çoklu görsel seçimi, SVG illüstrasyon kaydetme/paylaşma ve klavye açıkken 16 dp ek boşluk da gerçek Android cihazında henüz doğrulanmadı; başarılı EAS derlemesi paketlemeyi doğrular, fiziksel davranışı değil.
+- Yeni sürümdeki 45 saniyelik cihaz içi ses kaydı/çevrimdışı seslendirme, çoklu görsel seçimi, SVG illüstrasyon kaydetme/paylaşma ve klavye açıkken toplam yaklaşık 28 dp yükseltme de gerçek Android cihazında henüz doğrulanmadı; başarılı EAS derlemesi paketlemeyi doğrular, fiziksel davranışı değil.
 
 ## 8. [x] Comfortaa, sohbet kartları ve klavye UX güncellemesi
 
@@ -77,7 +77,7 @@
 - Seçilen görseller cihazın uygulamaya özel dosya alanına kopyalanır ve yerel çok kipli AI'ye tek bir istekte gönderilir; görsel veya görsel bağlamı hiçbir sunucuya yüklenmez.
 - Sohbet geçmişi seçilen tüm görsellerin yerel yolunu saklar; konuşma yeniden açıldığında bütün küçük önizlemeler gösterilir ve model bağlamı için önceki görsellerden en fazla ikisi belleği sınırlamak amacıyla yeniden eklenir. Önceden kaydedilmiş `imageUri`/`imageName` biçimindeki tek-görsel kayıtları da açılmaya devam eder.
 
-## 11. [ ] Çevrimdışı görsel oluşturma ve kaydetme
+## 11. [x] v7 mevcut sürüm: çevrimdışı SVG vektör illüstrasyon
 
 - Kanvas'a Görsel modu eklenir; kullanıcı bir tarif girip yerel AI'den çevrimdışı vektör illüstrasyon/poster oluşturabilir, sonucu uygulama içinde önizleyebilir ve Android paylaşım menüsünden SVG dosyası olarak kaydedebilir/paylaşabilir.
 - Model çıktısı izin verilen çizim öğeleri ve renklerle sınırlandırılır; keyfî SVG, betik veya harici bağlantı çalıştırılmaz, çevrimiçi görsel oluşturma servisi kullanılmaz ve yeni çok-gigabayt model kullanıcı onayı olmadan indirilmez.
@@ -85,10 +85,26 @@
 
 ## 12. [ ] Klavye açıkken yazma alanını daha yukarı taşı
 
-- Android klavyesi açıldığında sohbet yazma alanı ve gönder düğmesi normal klavye üstü konumundan yaklaşık 16 dp daha yukarıda kalır; yazılan metin tam görünür ve klavye tarafından örtülmez.
+- Android klavyesi açıldığında sohbet yazma alanı ve gönder düğmesi normal klavye üstü konumundan toplam yaklaşık 28 dp daha yukarıda kalır; mevcut 16 dp yükseltmeye yaklaşık 12 dp eklenir ve yazılan metin tam görünür, klavye tarafından örtülmez.
 - Var olan `softwareKeyboardLayoutMode: resize`, klavye açıkken alt sekmeleri gizleme ve içerik yeniden boyutlandırma davranışı korunur.
 
-## 13. [ ] Güncellenmiş Android APK (gömülü Türkçe mikrofon modeli)
+## 13. [x] Güncellenmiş Android APK (gömülü Türkçe mikrofon modeli)
 
 - Güncel native özellikler ve APK'ya gömülü Türkçe çevrimdışı STT modeli Android-only EAS `preview` APK içinde derlenir; `app.config.ts` Android `versionCode` değeri 5'ten 6'ya yükselir ve mevcut uygulama kimliği/scheme korunur.
 - EAS `Build from GitHub` yoluyla yalnızca Android hedeflenir; mağazaya otomatik gönderim yapılmaz. Build sonucu başarılı olmadıkça APK tamamlandı olarak sunulmaz.
+
+## 14. [ ] Klavye açıkken yazma alanını yukarı taşı ve güncel Android APK'yı hazırla
+
+- Android klavyesi açıldığında, kullanıcının yazdığı mesaj metni ve gönderme düğmesi klavyenin üstünde görünür kalmalı; yazı alanı klavye tarafından örtülmemelidir.
+- Önceki 16 dp yükseltmeye, istenen 8–16 aralığından ara değer olarak yaklaşık 12 dp eklenir; composer normal klavye üstü konumundan toplam yaklaşık 28 dp yukarıda olur. `softwareKeyboardLayoutMode: resize`, klavye açıkken alt sekmeleri gizleme ve içerik yeniden boyutlandırma korunur.
+- APK mevcut uygulamanın üzerine kurulabilmesi için Android `versionCode` 6'dan 7'ye yükseltilir; uygulama kimliği/scheme korunur. Yalnız Android EAS `preview` APK derlenir, mağazaya gönderilmez ve indirilebilir dosya olarak teslim edilir.
+
+## 15. [ ] Sonraki sürüm: ayrı, indirilebilir çevrimdışı PNG Görsel Kanvası
+
+- Mevcut Kanvas'taki Görsel seçeneği ayrı bir **Görsel Kanvası** ekranını açar; Metin, Kod ve PDF akışları çalışmaya devam eder. Yeni görsel alanı SVG değil PNG üretir.
+- Görsel modeli APK'ya gömülmez. Uygulama yüklendikten sonra kullanıcı indirmeyi kendisi başlatır; başlamadan önce dönüştürülmüş modelin gerçek indirme boyutu ve gereken depolama alanı gösterilir. Bu model sohbet modelinden ayrı tutulur ve mevcut 3,66 GB sohbet modeli tekrar indirilmez.
+- Model indirilip boyut ve SHA-256 doğrulaması tamamlandıktan sonra metinden görsel üretimi cihazda ve internet bağlantısı olmadan çalışır. Prompt veya sonuç görüntüsü sunucuya gönderilmez; ücretli API ya da çevrimiçi yedek kullanılmaz.
+- İlk sürüm 512×512 PNG üretir; kullanıcı sonucu ayrı ekranda önizleyip Android paylaşım/kaydetme akışıyla cihazda tutabilir. Kullanıcı arayüzünde, indirme bildiriminde ve hata mesajında teknik model/sağlayıcı adı yerine yalnızca ECHO AI markası kullanılır.
+- Pinned GGUF model dosyası 1,802,206,336 bayttır (SHA-256 `dd06826d1eca711efa38190395a5ee949d0427fc6422c39433358a815e5b066c`); TAESD decoder 9,793,292 bayttır (SHA-256 `db169d69145ec4ff064e49d99c95fa05d3eb04ee453de35824a6d0f325513549`). Bunlar CreativeML Open RAIL-M koşullarına tabidir. İndirmeden/üretimden önce uygulama, tam lisans metnini erişilebilir kılar ve kullanıcıdan kullanım kısıtlarını kabul etmesini ister; teknik sağlayıcı adı normal ürün ekranlarında gösterilmez.
+- Hedef, en az 8 GB RAM'li gerçek Android cihazlardır. Daha düşük bellekli cihazlar için destek doğrulanmadan çalışabilirlik sözü verilmez; uyumluluk ve depolama sınırları indirme öncesi açıkça gösterilir.
+- Yeni APK Android-only EAS `preview` sürümüdür; mevcut package/scheme korunur ve Android `versionCode` 7'den 8'e yükseltilir.
