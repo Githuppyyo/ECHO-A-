@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { AnimatedPressable } from "@/components/animated-pressable";
 import type { ConversationHandle } from "react-native-litert-lm";
 import { useEffect, useState } from "react";
+import { ImageStudioEntryCard } from "@/components/image-studio-entry-card";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -14,7 +15,6 @@ import * as Sharing from "expo-sharing";
 
 import { ChatActivityStatus } from "@/components/chat-activity-status";
 import { EchoText as Text, EchoTextInput as TextInput } from "@/components/echo-text";
-import { OfflineImageGenerator } from "@/components/offline-image-generator";
 import { useEchoAI } from "@/components/echo-ai-context";
 import { EchoBrand } from "@/components/echo-brand";
 import { ModelInstallCard } from "@/components/model-install-card";
@@ -190,11 +190,11 @@ export default function CanvasScreen() {
         <View style={{ gap: 5 }}>
           <Text style={{ color: colors.foreground, fontSize: 28, fontWeight: "800" }}>Kanvas</Text>
           <Text style={{ color: colors.muted, fontSize: 14, lineHeight: 20 }}>
-            Metin, kod veya çevrimdışı vektör illüstrasyon üret. Metin ve kod taslaklarını PDF olarak paylaş.
+            Metin ve kod taslakları oluştur, PDF olarak paylaş veya ayrı görsel kanvasında çevrimdışı PNG üret.
           </Text>
         </View>
 
-        {status !== "ready" ? <ModelInstallCard /> : null}
+        {mode !== "image" && status !== "ready" ? <ModelInstallCard /> : null}
 
         <View style={{ gap: 10 }}>
           <TextInput
@@ -281,7 +281,7 @@ export default function CanvasScreen() {
           ) : null}
         </View>
 
-        {mode === "image" ? <OfflineImageGenerator /> : (
+        {mode === "image" ? <ImageStudioEntryCard /> : (
         <View style={{ gap: 9, borderRadius: 18, padding: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
           <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: "700" }}>ECHO AI&apos;ye hazırla</Text>
           <TextInput
